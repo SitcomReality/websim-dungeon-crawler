@@ -10,5 +10,6 @@ export const EVENTS = {
     STATE_CHANGED: 'STATE_CHANGED', // payload: full game state
     ASSETS_LOADED: 'ASSETS_LOADED',
     TICK: 'TICK',
-    NEW_GAME: 'NEW_GAME' // payload: { characterIndex }
+    NEW_GAME: 'NEW_GAME', // payload: { characterIndex }
+    PLAYER_ACTION: 'PLAYER_ACTION' // payload: { abilityId }
 };

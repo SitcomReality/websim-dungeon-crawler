@@ -90,3 +90,53 @@
     transform: scale(0.96);
     box-shadow: 0 0 2px rgba(0,0,0,0.9);
 }
+
+/* Battle Menu */
+.battle-menu {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 10px;
+    pointer-events: auto;
+    flex-wrap: wrap;
+}
+
+.ability-btn {
+    background: #222;
+    border: 2px solid #555;
+    color: #fff;
+    padding: 8px 12px;
+    min-width: 80px;
+    border-radius: 6px;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 0 #111;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.ability-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #111;
+}
+
+.ability-btn.physical { border-color: #cd5c5c; background: #501010; }
+.ability-btn.elemental { border-color: #4682b4; background: #0b2e47; }
+.ability-btn.psychic { border-color: #9370db; background: #321857; }
+
+.ability-name {
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+}
+.ability-type {
+    font-size: 10px;
+    opacity: 0.8;
+}

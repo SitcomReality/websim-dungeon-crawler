@@ -12,6 +12,9 @@ class StateStore {
 
             // High-level mode: MENU or BATTLE
             mode: 'MENU',
+            
+            // Battle State
+            turn: 'PLAYER', // 'PLAYER', 'OPPONENT', 'BUSY', 'VICTORY', 'DEFEAT'
 
             // Battle participants
             playerCharacterIndex: null,
@@ -61,6 +64,7 @@ class StateStore {
 
         this.updateState({
             mode: 'BATTLE',
+            turn: 'PLAYER',
             roomX,
             roomY,
             previousRoomIndex: nextRoomIndex,
