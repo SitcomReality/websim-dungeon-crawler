@@ -1,4 +1,4 @@
-import { SPRITE_SIZE, ROOM_WIDTH, ROOM_HEIGHT } from '../../config/dimensions.js';
+import { SPRITE_SIZE } from '../../config/dimensions.js';
 import { CHARACTER_DATA } from '../../data/CharacterData.js';
 
 export class CharacterRenderer {
@@ -9,23 +9,37 @@ export class CharacterRenderer {
 
     /**
      * Draws a character based on their index in the CHARACTER_DATA array
+     * at the provided x,y (top-left of the sprite).
+     * If flipped is true, the sprite is mirrored horizontally.
      */
-    drawCharacter(index, x, y) {
+    drawCharacter(index, x, y, { flipped = false } = {}) {
         const char = CHARACTER_DATA[index];
         if (!char) return;
 
         const sx = char.gridX * SPRITE_SIZE;
         const sy = char.gridY * SPRITE_SIZE;
 
-        // Draw centered horizontally, sitting on the bottom
-        // Character is 256x256, Room is 384x256
-        const dx = (ROOM_WIDTH - SPRITE_SIZE) / 2 + x;
-        const dy = (ROOM_HEIGHT - SPRITE_SIZE) + y;
+        if (!flipped) {
+            this.ctx.drawImage(
+                this.spritesheet,
+                sx, sy, SPRITE_SIZE, SPRITE_SIZE,
+                x, y, SPRITE_SIZE, SPRITE_SIZE
+            );
+            return;
+        }
+
+        // Draw horizontally flipped
+        this.ctx.save();
+        // Translate so that the flip happens around the left edge of where we want to draw
+        this.ctx.translate(x + SPRITE_SIZE, y);
+        this.ctx.scale(-1, 1);
 
         this.ctx.drawImage(
             this.spritesheet,
             sx, sy, SPRITE_SIZE, SPRITE_SIZE,
-            dx, dy, SPRITE_SIZE, SPRITE_SIZE
+            0, 0, SPRITE_SIZE, SPRITE_SIZE
         );
+
+        this.ctx.restore();
     }
 }

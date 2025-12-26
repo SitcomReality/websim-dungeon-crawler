@@ -1,11 +1,24 @@
 import { globalBus, EVENTS } from '../../core/events/EventBus.js';
 import { GRID_COLS, GRID_ROWS } from '../../config/dimensions.js';
+import { CHARACTER_DATA } from '../CharacterData.js';
 
 class StateStore {
     constructor() {
         this.state = {
+            // Map / room state
             roomX: 0,
-            roomY: 0
+            roomY: 0,
+            previousRoomIndex: null,
+
+            // High-level mode: MENU or BATTLE
+            mode: 'MENU',
+
+            // Battle participants
+            playerCharacterIndex: null,
+            opponentCharacterIndex: null,
+            playerHP: 0,
+            opponentHP: 0,
+            maxHP: 100
         };
 
         this._setupListeners();
@@ -13,13 +26,12 @@ class StateStore {
 
     _setupListeners() {
         globalBus.on(EVENTS.NAVIGATE, this._handleNavigation.bind(this));
+        globalBus.on(EVENTS.NEW_GAME, this._handleNewGame.bind(this));
     }
 
     _handleNavigation({ direction }) {
         let { roomX, roomY } = this.state;
 
-        // Reset any temporary room state if needed here
-        
         switch (direction) {
             case 'NORTH':
                 roomY = (roomY - 1 + GRID_ROWS) % GRID_ROWS;
@@ -38,21 +50,54 @@ class StateStore {
         this.updateState({ roomX, roomY });
     }
 
+    _handleNewGame({ characterIndex }) {
+        const totalRooms = GRID_COLS * GRID_ROWS;
+        const nextRoomIndex = this._getRandomRoomIndex(this.state.previousRoomIndex, totalRooms);
+
+        const roomX = nextRoomIndex % GRID_COLS;
+        const roomY = Math.floor(nextRoomIndex / GRID_COLS);
+
+        const opponentIndex = this._getRandomOpponentIndex(characterIndex);
+
+        this.updateState({
+            mode: 'BATTLE',
+            roomX,
+            roomY,
+            previousRoomIndex: nextRoomIndex,
+            playerCharacterIndex: characterIndex,
+            opponentCharacterIndex: opponentIndex,
+            playerHP: 100,
+            opponentHP: 100,
+            maxHP: 100
+        });
+    }
+
+    _getRandomRoomIndex(previousIndex, totalRooms) {
+        if (totalRooms <= 1) return 0;
+        let idx;
+        do {
+            idx = Math.floor(Math.random() * totalRooms);
+        } while (idx === previousIndex);
+        return idx;
+    }
+
+    _getRandomOpponentIndex(playerIndex) {
+        const totalChars = CHARACTER_DATA.length;
+        if (totalChars <= 1) return playerIndex;
+        let idx;
+        do {
+            idx = Math.floor(Math.random() * totalChars);
+        } while (idx === playerIndex);
+        return idx;
+    }
+
     updateState(newState) {
         this.state = { ...this.state, ...newState };
         globalBus.emit(EVENTS.STATE_CHANGED, this.state);
     }
 
     getState() {
-        // Compute which character is in this room based on fixed logic for now
-        const roomIndex = this.state.roomY * GRID_COLS + this.state.roomX;
-        // There are 16 characters and 24 rooms. Some rooms will be empty or repeat.
-        const characterIndex = roomIndex < 16 ? roomIndex : -1;
-
-        return { 
-            ...this.state,
-            characterIndex
-        };
+        return { ...this.state };
     }
 }
 
