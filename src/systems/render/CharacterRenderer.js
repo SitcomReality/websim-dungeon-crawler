@@ -10,34 +10,38 @@ export class CharacterRenderer {
     /**
      * Draws a character based on their index in the CHARACTER_DATA array
      * at the provided x,y (top-left of the sprite).
-     * If flipped is true, the sprite is mirrored horizontally.
+     * Options:
+     *  - flipped: mirror horizontally
+     *  - scale: multiplier for sprite size (1 = full size)
      */
-    drawCharacter(index, x, y, { flipped = false } = {}) {
+    drawCharacter(index, x, y, { flipped = false, scale = 1 } = {}) {
         const char = CHARACTER_DATA[index];
         if (!char) return;
 
         const sx = char.gridX * SPRITE_SIZE;
         const sy = char.gridY * SPRITE_SIZE;
+        const dw = Math.round(SPRITE_SIZE * scale);
+        const dh = Math.round(SPRITE_SIZE * scale);
 
         if (!flipped) {
             this.ctx.drawImage(
                 this.spritesheet,
                 sx, sy, SPRITE_SIZE, SPRITE_SIZE,
-                x, y, SPRITE_SIZE, SPRITE_SIZE
+                x, y, dw, dh
             );
             return;
         }
 
-        // Draw horizontally flipped
+        // Draw horizontally flipped around the destination rectangle
         this.ctx.save();
-        // Translate so that the flip happens around the left edge of where we want to draw
-        this.ctx.translate(x + SPRITE_SIZE, y);
+        // Translate to the right edge of the destination, then flip
+        this.ctx.translate(x + dw, y);
         this.ctx.scale(-1, 1);
 
         this.ctx.drawImage(
             this.spritesheet,
             sx, sy, SPRITE_SIZE, SPRITE_SIZE,
-            0, 0, SPRITE_SIZE, SPRITE_SIZE
+            0, 0, dw, dh
         );
 
         this.ctx.restore();

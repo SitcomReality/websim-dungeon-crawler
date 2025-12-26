@@ -85,14 +85,18 @@ class Game {
             maxHP
         } = state;
 
-        const groundY = ROOM_HEIGHT - SPRITE_SIZE;
-        const horizontalMargin = 40;
+        // Scale characters to 50% and move them slightly closer to edges
+        const scale = 0.5;
+        const horizontalMargin = 20; // moved closer to edge (was 40)
+
+        const drawHeight = Math.round(SPRITE_SIZE * scale);
+        const groundY = ROOM_HEIGHT - drawHeight;
 
         // Player on the left
         if (playerCharacterIndex !== null) {
             const playerX = horizontalMargin;
             const playerY = groundY;
-            this.charRenderer.drawCharacter(playerCharacterIndex, playerX, playerY, { flipped: false });
+            this.charRenderer.drawCharacter(playerCharacterIndex, playerX, playerY, { flipped: false, scale });
 
             const barWidth = 90;
             const barHeight = 8;
@@ -103,9 +107,10 @@ class Game {
 
         // Opponent on the right, facing left (flipped)
         if (opponentCharacterIndex !== null) {
-            const opponentX = ROOM_WIDTH - SPRITE_SIZE - horizontalMargin;
+            const opponentDrawWidth = Math.round(SPRITE_SIZE * scale);
+            const opponentX = ROOM_WIDTH - opponentDrawWidth - horizontalMargin;
             const opponentY = groundY;
-            this.charRenderer.drawCharacter(opponentCharacterIndex, opponentX, opponentY, { flipped: true });
+            this.charRenderer.drawCharacter(opponentCharacterIndex, opponentX, opponentY, { flipped: true, scale });
 
             const barWidth = 90;
             const barHeight = 8;
