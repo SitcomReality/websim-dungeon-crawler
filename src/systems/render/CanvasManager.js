@@ -10,33 +10,14 @@ export class CanvasManager {
     }
 
     _resize() {
-        // We want to maintain aspect ratio but fill as much as possible
-        const aspect = ROOM_WIDTH / ROOM_HEIGHT;
-        const windowW = window.innerWidth;
-        const windowH = window.innerHeight;
-        const windowAspect = windowW / windowH;
-
-        let finalWidth, finalHeight;
-
-        if (windowAspect > aspect) {
-            // Window is wider than image, fit to height
-            finalHeight = windowH;
-            finalWidth = finalHeight * aspect;
-        } else {
-            // Window is taller than image, fit to width
-            finalWidth = windowW;
-            finalHeight = finalWidth / aspect;
-        }
-
-        // Set internal resolution to match texture resolution for crispness
-        // Or set it to display resolution?
-        // For pixel art, best to set internal resolution to logical size (ROOM_WIDTH/HEIGHT)
-        // and let CSS handle the scaling with image-rendering: pixelated
-        
+        // Keep internal resolution fixed for crisp pixel-art rendering
         this.canvas.width = ROOM_WIDTH;
         this.canvas.height = ROOM_HEIGHT;
 
-        // The CSS layout.css handles the visual sizing
+        // Make the canvas fill the full available width while preserving aspect ratio
+        // Setting CSS width to 100% and height to auto scales the canvas visually
+        this.canvas.style.width = '100%';
+        this.canvas.style.height = 'auto';
     }
 
     get context() {
