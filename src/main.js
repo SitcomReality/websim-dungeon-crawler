@@ -2,6 +2,7 @@ import { ASSETS } from './config/assets.js';
 import { AssetLoader } from './utils/AssetLoader.js';
 import { CanvasManager } from './systems/render/CanvasManager.js';
 import { RoomRenderer } from './systems/render/RoomRenderer.js';
+import { CharacterRenderer } from './systems/render/CharacterRenderer.js';
 import { DirectionalButtons } from './ui/controls/DirectionalButtons.js';
 import { gameState } from './data/store/StateStore.js';
 import { GameLoop } from './core/loop/GameLoop.js';
@@ -16,6 +17,7 @@ class Game {
         this.navigator = null;
         this.loop = null;
         this.textures = null;
+        this.charSprites = null;
     }
 
     async init() {
@@ -23,8 +25,13 @@ class Game {
         
         // Load Assets
         try {
-            this.textures = await AssetLoader.loadImage(ASSETS.WALL_TEXTURES);
-            console.log('Textures loaded');
+            const [textures, charSprites] = await Promise.all([
+                AssetLoader.loadImage(ASSETS.WALL_TEXTURES),
+                AssetLoader.loadImage(ASSETS.CHARACTER_SPRITESHEET)
+            ]);
+            this.textures = textures;
+            this.charSprites = charSprites;
+            console.log('Assets loaded');
         } catch (e) {
             console.error('Failed to load assets', e);
             return;
@@ -33,6 +40,7 @@ class Game {
         // Initialize Systems
         this.canvasManager = new CanvasManager('game-canvas');
         this.roomRenderer = new RoomRenderer(this.canvasManager.context, this.textures);
+        this.charRenderer = new CharacterRenderer(this.canvasManager.context, this.charSprites);
         this.navControls = new DirectionalButtons('ui-layer');
         this.navigator = new Navigator();
         this.loop = new GameLoop();
@@ -49,11 +57,15 @@ class Game {
     }
 
     render() {
-        // Clear logic if needed (not strictly needed for full screen opaque bg)
-        // this.canvasManager.clear();
+        const { roomX, roomY, characterIndex } = gameState.getState();
         
-        const { roomX, roomY } = gameState.getState();
+        // 1. Draw Background
         this.roomRenderer.draw(roomX, roomY);
+
+        // 2. Draw Character if present in room
+        if (characterIndex !== -1) {
+            this.charRenderer.drawCharacter(characterIndex, 0, 0);
+        }
     }
 }
 

@@ -6,3 +6,7 @@ export const ROOM_HEIGHT = 256;
 
 export const GRID_COLS = 4;
 export const GRID_ROWS = 6;
+
+// Character Sprite Dimensions
+export const SPRITE_SIZE = 256;
+export const SPRITE_GRID_SIZE = 4;

@@ -18,6 +18,8 @@ class StateStore {
     _handleNavigation({ direction }) {
         let { roomX, roomY } = this.state;
 
+        // Reset any temporary room state if needed here
+        
         switch (direction) {
             case 'NORTH':
                 roomY = (roomY - 1 + GRID_ROWS) % GRID_ROWS;
@@ -42,7 +44,15 @@ class StateStore {
     }
 
     getState() {
-        return { ...this.state };
+        // Compute which character is in this room based on fixed logic for now
+        const roomIndex = this.state.roomY * GRID_COLS + this.state.roomX;
+        // There are 16 characters and 24 rooms. Some rooms will be empty or repeat.
+        const characterIndex = roomIndex < 16 ? roomIndex : -1;
+
+        return { 
+            ...this.state,
+            characterIndex
+        };
     }
 }
 
