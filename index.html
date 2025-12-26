@@ -6,6 +6,7 @@
     <title>Dungeon Crawler</title>
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/retro.css">
     <link rel="stylesheet" href="css/ui.css">
     <script type="importmap">
         {
@@ -18,6 +19,11 @@
 <body>
     <div id="game-container">
         <canvas id="game-canvas"></canvas>
+        <div class="crt-effects">
+            <div class="scanlines"></div>
+            <div class="vignette"></div>
+            <div class="crt-flicker"></div>
+        </div>
         <div id="ui-layer"></div>
     </div>
     <script type="module" src="src/main.js"></script>

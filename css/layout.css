@@ -8,7 +8,12 @@
 }
 
 #game-canvas {
-    image-rendering: pixelated; /* Essential for pixel art */
+    /* Comprehensive list for sharp pixel scaling across all browsers */
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+    
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;

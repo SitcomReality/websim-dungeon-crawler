@@ -15,9 +15,15 @@ export class CanvasManager {
         this.canvas.height = ROOM_HEIGHT;
 
         // Make the canvas fill the full available width while preserving aspect ratio
-        // Setting CSS width to 100% and height to auto scales the canvas visually
         this.canvas.style.width = '100%';
         this.canvas.style.height = 'auto';
+
+        // Explicitly disable image smoothing for the canvas context
+        // This ensures the browser doesn't try to blur pixels when drawing
+        this.ctx.imageSmoothingEnabled = false;
+        this.ctx.webkitImageSmoothingEnabled = false;
+        this.ctx.mozImageSmoothingEnabled = false;
+        this.ctx.msImageSmoothingEnabled = false;
     }
 
     get context() {

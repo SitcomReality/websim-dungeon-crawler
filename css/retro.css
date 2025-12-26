@@ -1,0 +1,64 @@
+/* Retro CRT and Screen Effects */
+.crt-effects {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5; /* Above canvas, below or above UI depending on preference */
+    overflow: hidden;
+}
+
+/* Subtle scanline effect */
+.scanlines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%,
+        rgba(0, 0, 0, 0.15) 50%
+    );
+    background-size: 100% 4px;
+    z-index: 2;
+}
+
+/* Screen vignette for depth */
+.vignette {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(
+        circle,
+        rgba(0, 0, 0, 0) 50%,
+        rgba(0, 0, 0, 0.5) 150%
+    );
+    z-index: 3;
+}
+
+/* Subtle flicker animation to simulate old hardware */
+@keyframes crt-flicker {
+    0% { opacity: 0.99; }
+    5% { opacity: 0.95; }
+    10% { opacity: 0.99; }
+    15% { opacity: 0.97; }
+    20% { opacity: 1; }
+    100% { opacity: 1; }
+}
+
+.crt-flicker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(18, 16, 16, 0.02);
+    opacity: 0.1;
+    pointer-events: none;
+    animation: crt-flicker 0.15s infinite;
+    z-index: 4;
+}
