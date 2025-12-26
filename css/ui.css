@@ -1,0 +1,51 @@
+.nav-btn {
+    position: absolute;
+    pointer-events: auto;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.nav-btn:active {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(0.95);
+}
+
+.nav-btn.north {
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.nav-btn.north:active { transform: translateX(-50%) scale(0.95); }
+
+.nav-btn.south {
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.nav-btn.south:active { transform: translateX(-50%) scale(0.95); }
+
+.nav-btn.west {
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.nav-btn.west:active { transform: translateY(-50%) scale(0.95); }
+
+.nav-btn.east {
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.nav-btn.east:active { transform: translateY(-50%) scale(0.95); }
