@@ -50,45 +50,104 @@
 }
 .nav-btn.east:active { transform: translateY(-50%) scale(0.95); }
 
-/* Character selection menu */
-.char-select {
+/* Character selection menu - Carousel Style */
+.char-select-carousel {
     position: absolute;
     inset: 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     pointer-events: auto;
-    background: radial-gradient(circle at center, rgba(0,0,0,0.7), rgba(0,0,0,0.95));
-    padding: 12px;
+    background: radial-gradient(circle at center, rgba(0,0,0,0.85), rgba(0,0,0,1));
+    color: white;
+    z-index: 10;
 }
 
-.char-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-    width: 100%;
-    max-width: 320px;
-}
-
-.char-card {
-    background: rgba(20, 20, 20, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    color: #f5f5f5;
-    font-size: 12px;
-    padding: 8px 6px;
-    text-align: center;
+.selected-char-name {
+    font-size: 24px;
+    margin-bottom: 20px;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(255,255,255,0.3);
+}
+
+.carousel-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 30px;
+    width: 100%;
+    justify-content: center;
+}
+
+.sprite-display-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: -20px; /* Slight overlap */
+    position: relative;
+}
+
+.char-preview-sprite {
+    width: 100px;
+    height: 100px;
+    background-repeat: no-repeat;
+    transition: all 0.3s ease;
+}
+
+.char-preview-sprite.curr {
+    width: 160px;
+    height: 160px;
+    z-index: 2;
+    filter: drop-shadow(0 0 15px rgba(255,255,255,0.2));
+}
+
+.char-preview-sprite.prev, .char-preview-sprite.next {
+    width: 80px;
+    height: 80px;
+    opacity: 0.4;
+    filter: grayscale(0.5);
+    z-index: 1;
+}
+
+.carousel-nav-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.carousel-nav-btn:active {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(0.9);
+}
+
+.confirm-game-btn {
+    padding: 12px 30px;
+    font-size: 18px;
+    background: #4a148c;
+    border: 2px solid #7b1fa2;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1px;
     cursor: pointer;
     border-radius: 4px;
-    box-shadow: 0 0 6px rgba(0,0,0,0.6);
-    transition: background 0.15s, transform 0.08s, box-shadow 0.15s;
+    box-shadow: 0 4px 0 #310d5e;
+    transition: transform 0.1s, box-shadow 0.1s;
 }
 
-.char-card:active {
-    background: rgba(255, 255, 255, 0.12);
-    transform: scale(0.96);
-    box-shadow: 0 0 2px rgba(0,0,0,0.9);
+.confirm-game-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #310d5e;
 }
 
 /* Battle Menu */
