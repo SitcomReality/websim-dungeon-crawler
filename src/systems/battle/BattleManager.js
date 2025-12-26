@@ -32,6 +32,13 @@ export class BattleManager {
 
         if (!ability) return;
 
+        // Broadcast ability used for UI indicators
+        globalBus.emit(EVENTS.ABILITY_USED, {
+            attacker: 'PLAYER',
+            abilityId: ability.id,
+            abilityName: ability.name
+        });
+
         // Calculate damage
         const damage = this._calculateDamage(playerChar, opponentChar, ability);
 
@@ -40,6 +47,11 @@ export class BattleManager {
             () => { // On Hit
                 let newHP = Math.max(0, state.opponentHP - damage);
                 gameState.updateState({ opponentHP: newHP });
+
+                globalBus.emit(EVENTS.DAMAGE_APPLIED, {
+                    target: 'OPPONENT',
+                    amount: damage
+                });
             },
             () => { // On Complete
                 if (gameState.getState().opponentHP <= 0) {
@@ -68,10 +80,22 @@ export class BattleManager {
 
         const damage = this._calculateDamage(opponentChar, playerChar, ability);
 
+        // Broadcast ability used for UI indicators
+        globalBus.emit(EVENTS.ABILITY_USED, {
+            attacker: 'OPPONENT',
+            abilityId: ability.id,
+            abilityName: ability.name
+        });
+
         this.animator.playAttackSequence('OPPONENT', ability, damage,
             () => { // On Hit
                 let newHP = Math.max(0, state.playerHP - damage);
                 gameState.updateState({ playerHP: newHP });
+
+                globalBus.emit(EVENTS.DAMAGE_APPLIED, {
+                    target: 'PLAYER',
+                    amount: damage
+                });
             },
             () => { // On Complete
                 if (gameState.getState().playerHP <= 0) {

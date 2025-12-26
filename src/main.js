@@ -13,6 +13,7 @@ import { globalBus, EVENTS } from './core/events/EventBus.js';
 import { Navigator } from './systems/navigation/Navigator.js';
 import { BattleManager } from './systems/battle/BattleManager.js';
 import { BattleAnimator } from './systems/battle/BattleAnimator.js';
+import { BattleIndicatorManager } from './systems/battle/BattleIndicatorManager.js';
 import { ROOM_WIDTH, ROOM_HEIGHT, SPRITE_SIZE } from './config/dimensions.js';
 
 class Game {
@@ -31,6 +32,7 @@ class Game {
         this.battleManager = null;
         this.battleAnimator = null;
         this.battleMenu = null;
+        this.battleIndicators = null;
     }
 
     async init() {
@@ -63,6 +65,7 @@ class Game {
         this.battleAnimator = new BattleAnimator();
         this.battleManager = new BattleManager(this.battleAnimator);
         this.battleMenu = new BattleMenu('ui-layer');
+        this.battleIndicators = new BattleIndicatorManager();
 
         this.loop = new GameLoop();
 
@@ -73,13 +76,18 @@ class Game {
         this.loop.start();
     }
 
-    render() {
+    render({ deltaTime }) {
         const state = gameState.getState();
         const { mode, roomX, roomY } = state;
 
         if (mode !== 'BATTLE') {
             this.canvasManager.clear();
             return;
+        }
+
+        // Update battle indicators
+        if (this.battleIndicators) {
+            this.battleIndicators.update(deltaTime);
         }
 
         // 1. Draw Background
@@ -140,6 +148,11 @@ class Game {
 
         // Draw Battle Effects
         this.battleAnimator.draw(this.canvasManager.context);
+
+        // Draw Battle Indicators (floating numbers, ability banner)
+        if (this.battleIndicators) {
+            this.battleIndicators.draw(this.canvasManager.context);
+        }
     }
 }
 
