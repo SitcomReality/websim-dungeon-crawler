@@ -3,6 +3,7 @@ import { AssetLoader } from './utils/AssetLoader.js';
 import { CanvasManager } from './systems/render/CanvasManager.js';
 import { RoomRenderer } from './systems/render/RoomRenderer.js';
 import { CharacterRenderer } from './systems/render/CharacterRenderer.js';
+import { StatGridRenderer } from './systems/render/StatGridRenderer.js';
 import { DirectionalButtons } from './ui/controls/DirectionalButtons.js';
 import { CharacterSelectMenu } from './ui/menu/CharacterSelectMenu.js';
 import { BattleMenu } from './ui/battle/BattleMenu.js';
@@ -15,12 +16,14 @@ import { BattleManager } from './systems/battle/BattleManager.js';
 import { BattleAnimator } from './systems/battle/BattleAnimator.js';
 import { BattleIndicatorManager } from './systems/battle/BattleIndicatorManager.js';
 import { ROOM_WIDTH, ROOM_HEIGHT, SPRITE_SIZE } from './config/dimensions.js';
+import { CHARACTER_DATA } from './data/CharacterData.js';
 
 class Game {
     constructor() {
         this.canvasManager = null;
         this.roomRenderer = null;
         this.charRenderer = null;
+        this.statGridRenderer = null;
         this.healthBarRenderer = null;
         this.navControls = null;
         this.navigator = null;
@@ -40,12 +43,14 @@ class Game {
         
         // Load Assets
         try {
-            const [textures, charSprites] = await Promise.all([
+            const [textures, charSprites, powerIcons] = await Promise.all([
                 AssetLoader.loadImage(ASSETS.WALL_TEXTURES),
-                AssetLoader.loadImage(ASSETS.CHARACTER_SPRITESHEET)
+                AssetLoader.loadImage(ASSETS.CHARACTER_SPRITESHEET),
+                AssetLoader.loadImage(ASSETS.POWER_ICONS)
             ]);
             this.textures = textures;
             this.charSprites = charSprites;
+            this.powerIcons = powerIcons;
             console.log('Assets loaded');
         } catch (e) {
             console.error('Failed to load assets', e);
@@ -56,6 +61,7 @@ class Game {
         this.canvasManager = new CanvasManager('game-canvas');
         this.roomRenderer = new RoomRenderer(this.canvasManager.context, this.textures);
         this.charRenderer = new CharacterRenderer(this.canvasManager.context, this.charSprites);
+        this.statGridRenderer = new StatGridRenderer(this.canvasManager.context, this.powerIcons);
         this.healthBarRenderer = new HealthBarRenderer(this.canvasManager.context);
         this.navControls = new DirectionalButtons('ui-layer');
         this.navigator = new Navigator();
@@ -106,15 +112,15 @@ class Game {
             maxHP
         } = state;
 
-        // Scale characters to 50%
         const scale = 0.5;
         const horizontalMargin = 20;
-
         const drawHeight = Math.round(SPRITE_SIZE * scale);
         const groundY = ROOM_HEIGHT - drawHeight;
-
-        // Get Animation Offsets
         const { playerOffset, opponentOffset } = this.battleAnimator;
+
+        const barWidth = 90;
+        const barHeight = 8;
+        const gridYOffset = 70; // Higher up above health bar
 
         // Player on the left
         if (playerCharacterIndex !== null) {
@@ -122,13 +128,17 @@ class Game {
             const playerY = groundY + playerOffset.y;
             this.charRenderer.drawCharacter(playerCharacterIndex, playerX, playerY, { flipped: false, scale });
 
-            const barWidth = 90;
-            const barHeight = 8;
-            const barX = horizontalMargin; // Keep bar stationary? Or move with char? Moving with char looks better usually.
+            // Health Bar
+            const barX = horizontalMargin;
             const barY = groundY - 14;
-            
-            // Draw bar at static position to prevent jitter/vomit inducing movement
             this.healthBarRenderer.drawBar(barX, barY, barWidth, barHeight, playerHP, maxHP);
+
+            // Stat Grid (Centered relative to the health bar)
+            const stats = CHARACTER_DATA[playerCharacterIndex]?.stats;
+            if (stats) {
+                const gridX = barX + (barWidth / 2) - 15; // Rough center adjust
+                this.statGridRenderer.draw(gridX, groundY - gridYOffset, stats);
+            }
         }
 
         // Opponent on the right, facing left (flipped)
@@ -139,11 +149,17 @@ class Game {
             const opponentY = groundY + opponentOffset.y;
             this.charRenderer.drawCharacter(opponentCharacterIndex, opponentX, opponentY, { flipped: true, scale });
 
-            const barWidth = 90;
-            const barHeight = 8;
+            // Health Bar
             const barX = opponentBaseX;
             const barY = groundY - 14;
             this.healthBarRenderer.drawBar(barX, barY, barWidth, barHeight, opponentHP, maxHP);
+
+            // Stat Grid
+            const stats = CHARACTER_DATA[opponentCharacterIndex]?.stats;
+            if (stats) {
+                const gridX = barX + (barWidth / 2) - 15;
+                this.statGridRenderer.draw(gridX, groundY - gridYOffset, stats);
+            }
         }
 
         // Draw Battle Effects
