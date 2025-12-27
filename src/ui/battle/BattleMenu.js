@@ -52,10 +52,16 @@ export class BattleMenu {
             detailPanel.innerHTML = `
                 <div class="detail-header">
                     <span class="detail-name">${selectedAbility.name}</span>
-                    <span class="detail-domain ${selectedAbility.domain}">${selectedAbility.domain}</span>
+                    <span class="detail-domain ${selectedAbility.domain}">
+                        <i class="icon ${selectedAbility.domain}"></i>
+                        ${selectedAbility.domain}
+                    </span>
                 </div>
                 <div class="detail-desc">${selectedAbility.description}</div>
-                <div class="detail-stats">Uses ${selectedAbility.damageType} attribute</div>
+                <div class="detail-stats">
+                    Uses <i class="icon ${selectedAbility.damageType}"></i> 
+                    ${selectedAbility.damageType} attribute
+                </div>
                 <button class="confirm-ability-btn">Execute Action</button>
             `;
             
@@ -82,7 +88,10 @@ export class BattleMenu {
             btn.className = `ability-btn ${ability.domain} ${isSelected ? 'selected' : ''}`;
             btn.innerHTML = `
                 <span class="ability-name">${ability.name}</span>
-                <span class="ability-type">${ability.damageType}</span>
+                <span class="ability-type">
+                    <i class="icon ${ability.damageType}"></i>
+                    ${ability.damageType}
+                </span>
             `;
             
             btn.onclick = () => {

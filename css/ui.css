@@ -293,4 +293,36 @@
 .ability-type {
     font-size: 10px;
     opacity: 0.8;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Power Domain Icons */
+.icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-image: url('../powerdomainicons.png');
+    background-size: 48px 32px; /* 3 icons @ 150px scaled to 16px each = 48px wide, 2 rows = 32px high */
+    image-rendering: pixelated;
+}
+
+.icon.power { background-position: 0 0; }
+.icon.finesse { background-position: -16px 0; }
+.icon.resistance { background-position: -32px 0; }
+.icon.physical { background-position: 0 -16px; }
+.icon.elemental { background-position: -16px -16px; }
+.icon.psychic { background-position: -32px -16px; }
+
+.detail-domain {
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
+}
+
+.detail-stats {
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
