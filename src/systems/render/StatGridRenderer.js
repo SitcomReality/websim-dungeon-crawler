@@ -5,9 +5,8 @@ export class StatGridRenderer {
         this.ctx = ctx;
         this.iconsImage = iconsImage;
         this.iconSize = 150; // Size in source image
-        // Increase on-canvas icon size for better visibility
-        this.drawIconSize = 20;
-        this.cellSize = 18;
+        this.drawIconSize = 12;
+        this.cellSize = 14;
     }
 
     /**
@@ -22,7 +21,7 @@ export class StatGridRenderer {
 
         const types = ['power', 'finesse', 'resistance'];
         const domains = ['physical', 'elemental', 'psychic'];
-        const padding = 6;
+        const padding = 4;
         
         this.ctx.save();
         
@@ -51,17 +50,17 @@ export class StatGridRenderer {
                 const isHighlighted = highlight && highlight.row === i && highlight.col === j;
 
                 // Background box
-                this.ctx.fillStyle = isHighlighted ? 'rgba(255, 255, 255, 0.18)' : 'rgba(0, 0, 0, 0.45)';
+                this.ctx.fillStyle = isHighlighted ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.4)';
                 this.ctx.fillRect(cx, cy, this.cellSize - 1, this.cellSize - 1);
 
                 // Stat indicator block
-                const fillRatio = Math.max(0.18, val / 10);
-                let colorAlpha = 0.35 + (fillRatio * 0.6);
+                const fillRatio = Math.max(0.2, val / 10);
+                let colorAlpha = 0.4 + (fillRatio * 0.6);
                 
                 if (isHighlighted) {
                     // Pulse highlight alpha
-                    const pulse = (Math.sin(time / 180) + 1) / 2;
-                    colorAlpha = 0.55 + (pulse * 0.35);
+                    const pulse = (Math.sin(time / 150) + 1) / 2;
+                    colorAlpha = 0.6 + (pulse * 0.4);
                 }
 
                 this.ctx.fillStyle = this._getDomainColor(domains[j], colorAlpha);
@@ -72,13 +71,13 @@ export class StatGridRenderer {
 
                 // Highlight border
                 if (isHighlighted) {
-                    const pulseSize = (Math.sin(time / 150) + 1) * 0.45;
-                    this.ctx.strokeStyle = `rgba(255, 255, 255, ${0.45 + pulseSize * 0.45})`;
-                    this.ctx.lineWidth = 1.6;
+                    const pulseSize = (Math.sin(time / 150) + 1) * 0.5;
+                    this.ctx.strokeStyle = `rgba(255, 255, 255, ${0.5 + pulseSize * 0.5})`;
+                    this.ctx.lineWidth = 1.5;
                     this.ctx.strokeRect(cx - 1, cy - 1, this.cellSize + 1, this.cellSize + 1);
                 } else {
-                    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-                    this.ctx.lineWidth = 0.6;
+                    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                    this.ctx.lineWidth = 0.5;
                     this.ctx.strokeRect(cx, cy, this.cellSize - 1, this.cellSize - 1);
                 }
             }
@@ -99,35 +98,11 @@ export class StatGridRenderer {
         const pos = coords[key];
         if (!pos) return;
 
-        // Temporarily enable high-quality smoothing for icon rendering so icons scale gracefully
-        const prev = {
-            imageSmoothingEnabled: this.ctx.imageSmoothingEnabled,
-            webkitImageSmoothingEnabled: this.ctx.webkitImageSmoothingEnabled,
-            mozImageSmoothingEnabled: this.ctx.mozImageSmoothingEnabled,
-            msImageSmoothingEnabled: this.ctx.msImageSmoothingEnabled,
-            imageSmoothingQuality: this.ctx.imageSmoothingQuality
-        };
-
-        try {
-            if (typeof this.ctx.imageSmoothingEnabled !== 'undefined') this.ctx.imageSmoothingEnabled = true;
-            if (typeof this.ctx.webkitImageSmoothingEnabled !== 'undefined') this.ctx.webkitImageSmoothingEnabled = true;
-            if (typeof this.ctx.mozImageSmoothingEnabled !== 'undefined') this.ctx.mozImageSmoothingEnabled = true;
-            if (typeof this.ctx.msImageSmoothingEnabled !== 'undefined') this.ctx.msImageSmoothingEnabled = true;
-            if (typeof this.ctx.imageSmoothingQuality !== 'undefined') this.ctx.imageSmoothingQuality = 'high';
-
-            this.ctx.drawImage(
-                this.iconsImage,
-                pos.x * this.iconSize, pos.y * this.iconSize, this.iconSize, this.iconSize,
-                Math.round(dx), Math.round(dy), this.drawIconSize, this.drawIconSize
-            );
-        } finally {
-            // Restore previous smoothing settings
-            if (typeof prev.imageSmoothingEnabled !== 'undefined') this.ctx.imageSmoothingEnabled = prev.imageSmoothingEnabled;
-            if (typeof prev.webkitImageSmoothingEnabled !== 'undefined') this.ctx.webkitImageSmoothingEnabled = prev.webkitImageSmoothingEnabled;
-            if (typeof prev.mozImageSmoothingEnabled !== 'undefined') this.ctx.mozImageSmoothingEnabled = prev.mozImageSmoothingEnabled;
-            if (typeof prev.msImageSmoothingEnabled !== 'undefined') this.ctx.msImageSmoothingEnabled = prev.msImageSmoothingEnabled;
-            if (typeof prev.imageSmoothingQuality !== 'undefined') this.ctx.imageSmoothingQuality = prev.imageSmoothingQuality;
-        }
+        this.ctx.drawImage(
+            this.iconsImage,
+            pos.x * this.iconSize, pos.y * this.iconSize, this.iconSize, this.iconSize,
+            dx, dy, this.drawIconSize, this.drawIconSize
+        );
     }
 
     _getDomainColor(domain, alpha) {
