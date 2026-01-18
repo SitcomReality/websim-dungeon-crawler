@@ -124,7 +124,7 @@ class Game {
 
         const barWidth = 90;
         const barHeight = 8;
-        const gridYOffset = 70; // Higher up above health bar
+        const gridYOffset = 98; // Higher up above health bar (moved up ~2 cell heights)
 
         // Determine highlights
         let playerHighlight = null;
