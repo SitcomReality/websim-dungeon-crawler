@@ -85,9 +85,7 @@ export class BattleManager {
         });
 
         const playerChar = CHARACTER_DATA[state.playerCharacterIndex];
-
         const ability = ABILITY_POOL.find(a => a.id === abilityId);
-        const playerChar = CHARACTER_DATA[state.playerCharacterIndex];
 
         const damage = this._calculateDamage(opponentChar, playerChar, ability);
 
