@@ -14,8 +14,9 @@ export class StatGridRenderer {
      * @param {number} x Top-left X coordinate of the grid (excluding labels)
      * @param {number} y Top-left Y coordinate of the grid
      * @param {Object} stats The character's stats object
+     * @param {Object} highlight { row, col } or null
      */
-    draw(x, y, stats) {
+    draw(x, y, stats, highlight = null) {
         if (!stats) return;
 
         const types = ['power', 'finesse', 'resistance'];
@@ -39,30 +40,46 @@ export class StatGridRenderer {
         });
 
         // 3. Draw the 3x3 grid cells
+        const time = performance.now();
         for (let i = 0; i < 3; i++) { // Rows: types
             for (let j = 0; j < 3; j++) { // Cols: domains
                 const val = stats[domains[j]][types[i]];
                 const cx = x + j * this.cellSize;
                 const cy = y + i * this.cellSize;
 
+                const isHighlighted = highlight && highlight.row === i && highlight.col === j;
+
                 // Background box
-                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+                this.ctx.fillStyle = isHighlighted ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.4)';
                 this.ctx.fillRect(cx, cy, this.cellSize - 1, this.cellSize - 1);
 
                 // Stat indicator block
-                // Scale block size based on value (1-10)
                 const fillRatio = Math.max(0.2, val / 10);
-                const colorAlpha = 0.4 + (fillRatio * 0.6);
+                let colorAlpha = 0.4 + (fillRatio * 0.6);
+                
+                if (isHighlighted) {
+                    // Pulse highlight alpha
+                    const pulse = (Math.sin(time / 150) + 1) / 2;
+                    colorAlpha = 0.6 + (pulse * 0.4);
+                }
+
                 this.ctx.fillStyle = this._getDomainColor(domains[j], colorAlpha);
                 
                 const inset = (this.cellSize - 1) * (1 - fillRatio) * 0.5;
                 const size = (this.cellSize - 1) - (inset * 2);
                 this.ctx.fillRect(cx + inset, cy + inset, size, size);
 
-                // Optional: thin border for the cell
-                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-                this.ctx.lineWidth = 0.5;
-                this.ctx.strokeRect(cx, cy, this.cellSize - 1, this.cellSize - 1);
+                // Highlight border
+                if (isHighlighted) {
+                    const pulseSize = (Math.sin(time / 150) + 1) * 0.5;
+                    this.ctx.strokeStyle = `rgba(255, 255, 255, ${0.5 + pulseSize * 0.5})`;
+                    this.ctx.lineWidth = 1.5;
+                    this.ctx.strokeRect(cx - 1, cy - 1, this.cellSize + 1, this.cellSize + 1);
+                } else {
+                    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                    this.ctx.lineWidth = 0.5;
+                    this.ctx.strokeRect(cx, cy, this.cellSize - 1, this.cellSize - 1);
+                }
             }
         }
 

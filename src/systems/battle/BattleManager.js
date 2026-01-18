@@ -23,8 +23,13 @@ export class BattleManager {
         const state = gameState.getState();
         if (state.turn !== 'PLAYER' || state.mode !== 'BATTLE') return;
 
-        // Lock turn
-        gameState.updateState({ turn: 'BUSY' });
+        // Lock turn and set executing ability
+        gameState.updateState({ 
+            turn: 'BUSY', 
+            executingAbilityId: abilityId, 
+            executingAttacker: 'PLAYER',
+            selectedAbilityId: null 
+        });
 
         const playerChar = CHARACTER_DATA[state.playerCharacterIndex];
         const ability = ABILITY_POOL.find(a => a.id === abilityId);
@@ -54,9 +59,9 @@ export class BattleManager {
                 });
             },
             () => { // On Complete
+                gameState.updateState({ executingAbilityId: null, executingAttacker: null });
                 if (gameState.getState().opponentHP <= 0) {
                     gameState.updateState({ turn: 'VICTORY' });
-                    // Handle victory logic (screen, etc) later
                 } else {
                     gameState.updateState({ turn: 'OPPONENT' });
                 }
@@ -69,14 +74,20 @@ export class BattleManager {
         // Check if battle ended during delay
         if (state.mode !== 'BATTLE' || state.turn !== 'OPPONENT') return;
 
-        gameState.updateState({ turn: 'BUSY' });
-
+        // AI Logic: Random ability
         const opponentChar = CHARACTER_DATA[state.opponentCharacterIndex];
+        const abilityId = opponentChar.abilities[Math.floor(Math.random() * opponentChar.abilities.length)];
+
+        gameState.updateState({ 
+            turn: 'BUSY',
+            executingAbilityId: abilityId,
+            executingAttacker: 'OPPONENT'
+        });
+
         const playerChar = CHARACTER_DATA[state.playerCharacterIndex];
 
-        // AI Logic: Random ability for now
-        const abilityId = opponentChar.abilities[Math.floor(Math.random() * opponentChar.abilities.length)];
         const ability = ABILITY_POOL.find(a => a.id === abilityId);
+        const playerChar = CHARACTER_DATA[state.playerCharacterIndex];
 
         const damage = this._calculateDamage(opponentChar, playerChar, ability);
 
@@ -98,6 +109,7 @@ export class BattleManager {
                 });
             },
             () => { // On Complete
+                gameState.updateState({ executingAbilityId: null, executingAttacker: null });
                 if (gameState.getState().playerHP <= 0) {
                     gameState.updateState({ turn: 'DEFEAT' });
                 } else {

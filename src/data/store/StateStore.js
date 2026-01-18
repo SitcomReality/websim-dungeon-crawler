@@ -21,7 +21,12 @@ class StateStore {
             opponentCharacterIndex: null,
             playerHP: 0,
             opponentHP: 0,
-            maxHP: 100
+            maxHP: 100,
+
+            // Highlighting for stats
+            selectedAbilityId: null, // For player's hover/selection
+            executingAbilityId: null, // During animation
+            executingAttacker: null   // 'PLAYER' or 'OPPONENT'
         };
 
         this._setupListeners();

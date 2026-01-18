@@ -1,5 +1,5 @@
 /**
- * Universal ability pool - all available abilities in the game
+ * Universal ability pool - all available abilities in the game.
  * Characters will be assigned 4 abilities from this pool
  */
 export const ABILITY_POOL = [

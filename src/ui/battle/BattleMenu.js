@@ -22,7 +22,9 @@ export class BattleMenu {
     _onStateChange(state) {
         // Reset selection if it's no longer the player's turn or we leave battle
         if (state.turn !== 'PLAYER' || state.mode !== 'BATTLE') {
-            this.selectedAbilityId = null;
+            if (state.selectedAbilityId !== null) {
+                gameState.updateState({ selectedAbilityId: null });
+            }
         }
         this._render(state);
     }
@@ -43,7 +45,7 @@ export class BattleMenu {
         this.element.innerHTML = '';
 
         const playerChar = CHARACTER_DATA[state.playerCharacterIndex];
-        const selectedAbility = ABILITY_POOL.find(a => a.id === this.selectedAbilityId);
+        const selectedAbility = ABILITY_POOL.find(a => a.id === state.selectedAbilityId);
 
         // 1. Render Description Panel if an ability is selected
         if (selectedAbility) {
@@ -69,7 +71,6 @@ export class BattleMenu {
             confirmBtn.onclick = (e) => {
                 e.stopPropagation();
                 globalBus.emit(EVENTS.PLAYER_ACTION, { abilityId: selectedAbility.id });
-                this.selectedAbilityId = null;
             };
 
             this.element.appendChild(detailPanel);
@@ -95,8 +96,7 @@ export class BattleMenu {
             `;
             
             btn.onclick = () => {
-                this.selectedAbilityId = ability.id;
-                this._render(gameState.getState());
+                gameState.updateState({ selectedAbilityId: ability.id });
             };
 
             buttonList.appendChild(btn);

@@ -17,6 +17,7 @@ import { BattleAnimator } from './systems/battle/BattleAnimator.js';
 import { BattleIndicatorManager } from './systems/battle/BattleIndicatorManager.js';
 import { ROOM_WIDTH, ROOM_HEIGHT, SPRITE_SIZE } from './config/dimensions.js';
 import { CHARACTER_DATA } from './data/CharacterData.js';
+import { ABILITY_POOL } from './data/AbilityData.js';
 
 class Game {
     constructor() {
@@ -109,7 +110,10 @@ class Game {
             opponentCharacterIndex,
             playerHP,
             opponentHP,
-            maxHP
+            maxHP,
+            selectedAbilityId,
+            executingAbilityId,
+            executingAttacker
         } = state;
 
         const scale = 0.5;
@@ -122,6 +126,32 @@ class Game {
         const barHeight = 8;
         const gridYOffset = 70; // Higher up above health bar
 
+        // Determine highlights
+        let playerHighlight = null;
+        let opponentHighlight = null;
+        
+        const activeAbilityId = executingAbilityId || selectedAbilityId;
+        const currentAttacker = executingAbilityId ? executingAttacker : 'PLAYER';
+
+        if (activeAbilityId) {
+            const ability = ABILITY_POOL.find(a => a.id === activeAbilityId);
+            if (ability) {
+                const rowMap = { power: 0, finesse: 1, resistance: 2 };
+                const colMap = { physical: 0, elemental: 1, psychic: 2 };
+                const domainCol = colMap[ability.domain];
+                const damageRow = rowMap[ability.damageType];
+                const resRow = 2; // Resistance is always row 2
+
+                if (currentAttacker === 'PLAYER') {
+                    playerHighlight = { row: damageRow, col: domainCol };
+                    opponentHighlight = { row: resRow, col: domainCol };
+                } else {
+                    opponentHighlight = { row: damageRow, col: domainCol };
+                    playerHighlight = { row: resRow, col: domainCol };
+                }
+            }
+        }
+
         // Player on the left
         if (playerCharacterIndex !== null) {
             const playerX = horizontalMargin + playerOffset.x;
@@ -133,15 +163,15 @@ class Game {
             const barY = groundY - 14;
             this.healthBarRenderer.drawBar(barX, barY, barWidth, barHeight, playerHP, maxHP);
 
-            // Stat Grid (Centered relative to the health bar)
+            // Stat Grid
             const stats = CHARACTER_DATA[playerCharacterIndex]?.stats;
             if (stats) {
-                const gridX = barX + (barWidth / 2) - 15; // Rough center adjust
-                this.statGridRenderer.draw(gridX, groundY - gridYOffset, stats);
+                const gridX = barX + (barWidth / 2) - 15;
+                this.statGridRenderer.draw(gridX, groundY - gridYOffset, stats, playerHighlight);
             }
         }
 
-        // Opponent on the right, facing left (flipped)
+        // Opponent on the right
         if (opponentCharacterIndex !== null) {
             const opponentDrawWidth = Math.round(SPRITE_SIZE * scale);
             const opponentBaseX = ROOM_WIDTH - opponentDrawWidth - horizontalMargin;
@@ -158,7 +188,7 @@ class Game {
             const stats = CHARACTER_DATA[opponentCharacterIndex]?.stats;
             if (stats) {
                 const gridX = barX + (barWidth / 2) - 15;
-                this.statGridRenderer.draw(gridX, groundY - gridYOffset, stats);
+                this.statGridRenderer.draw(gridX, groundY - gridYOffset, stats, opponentHighlight);
             }
         }
 
