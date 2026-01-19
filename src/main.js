@@ -104,6 +104,43 @@ class Game {
         this._renderBattle(state);
     }
 
+    /**
+     * Draws the opponent's telegraphed move information
+     */
+    _drawOpponentIntent(x, y, width, damage, domain) {
+        const ctx = this.canvasManager.context;
+        const iconSize = 12;
+        const padding = 2;
+        
+        ctx.save();
+        
+        // Background for intent
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(x, y, width, 18);
+        ctx.strokeStyle = 'rgba(255, 40, 40, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, width, 18);
+
+        // Icons: Resistance Icon + Domain Icon
+        // Resistance icon is top row, index 2. Domain depends on the attack.
+        const centerX = x + 10;
+        const centerY = y + 3;
+
+        // Draw Player's Resistance Icon (The stat they will use)
+        this.statGridRenderer._drawIcon('resistance', centerX, centerY);
+        // Draw Domain Icon (The element of the attack)
+        this.statGridRenderer._drawIcon(domain, centerX + iconSize + padding, centerY);
+
+        // Text: Predicted Damage
+        ctx.fillStyle = '#ff4444';
+        ctx.font = 'bold 10px monospace';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${damage} DMG`, x + width - 4, y + 10);
+
+        ctx.restore();
+    }
+
     _renderBattle(state) {
         const {
             playerCharacterIndex,
@@ -113,7 +150,9 @@ class Game {
             maxHP,
             selectedAbilityId,
             executingAbilityId,
-            executingAttacker
+            executingAttacker,
+            opponentIntent,
+            turn
         } = state;
 
         const scale = 0.5;
@@ -189,6 +228,15 @@ class Game {
             if (stats) {
                 const gridX = barX + (barWidth / 2) - 15;
                 this.statGridRenderer.draw(gridX, groundY - gridYOffset, stats, opponentHighlight);
+            }
+
+            // Draw Opponent Intent
+            if (turn === 'PLAYER' && opponentIntent) {
+                const intentY = barY + barHeight + 4;
+                const ability = ABILITY_POOL.find(a => a.id === opponentIntent.abilityId);
+                if (ability) {
+                    this._drawOpponentIntent(barX, intentY, barWidth, opponentIntent.predictedDamage, ability.domain);
+                }
             }
         }
 

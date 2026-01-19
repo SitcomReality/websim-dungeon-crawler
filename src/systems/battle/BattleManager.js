@@ -12,11 +12,35 @@ export class BattleManager {
     }
 
     _onStateChange(state) {
+        // When it becomes the player's turn, decide the opponent's next move immediately
+        if (state.mode === 'BATTLE' && state.turn === 'PLAYER' && !state.opponentIntent) {
+            this._decideOpponentIntent();
+        }
+
         // If it's opponent's turn, trigger AI after delay
         if (state.mode === 'BATTLE' && state.turn === 'OPPONENT') {
             // Small delay for pacing
             setTimeout(() => this._performOpponentTurn(), 1000);
         }
+    }
+
+    _decideOpponentIntent() {
+        const state = gameState.getState();
+        const opponentChar = CHARACTER_DATA[state.opponentCharacterIndex];
+        const playerChar = CHARACTER_DATA[state.playerCharacterIndex];
+        
+        if (!opponentChar || !playerChar) return;
+
+        const abilityId = opponentChar.abilities[Math.floor(Math.random() * opponentChar.abilities.length)];
+        const ability = ABILITY_POOL.find(a => a.id === abilityId);
+        const damage = this._calculateDamage(opponentChar, playerChar, ability);
+
+        gameState.updateState({
+            opponentIntent: {
+                abilityId,
+                predictedDamage: damage
+            }
+        });
     }
 
     _handlePlayerAction({ abilityId }) {
@@ -74,20 +98,27 @@ export class BattleManager {
         // Check if battle ended during delay
         if (state.mode !== 'BATTLE' || state.turn !== 'OPPONENT') return;
 
-        // AI Logic: Random ability
-        const opponentChar = CHARACTER_DATA[state.opponentCharacterIndex];
-        const abilityId = opponentChar.abilities[Math.floor(Math.random() * opponentChar.abilities.length)];
+        // Use pre-decided intent
+        const intent = state.opponentIntent;
+        if (!intent) {
+            // Fallback if somehow intent wasn't set
+            this._decideOpponentIntent();
+            return this._performOpponentTurn();
+        }
+
+        const abilityId = intent.abilityId;
+        const damage = intent.predictedDamage;
 
         gameState.updateState({ 
             turn: 'BUSY',
             executingAbilityId: abilityId,
-            executingAttacker: 'OPPONENT'
+            executingAttacker: 'OPPONENT',
+            opponentIntent: null // Clear intent once used
         });
 
+        const opponentChar = CHARACTER_DATA[state.opponentCharacterIndex];
         const playerChar = CHARACTER_DATA[state.playerCharacterIndex];
         const ability = ABILITY_POOL.find(a => a.id === abilityId);
-
-        const damage = this._calculateDamage(opponentChar, playerChar, ability);
 
         // Broadcast ability used for UI indicators
         globalBus.emit(EVENTS.ABILITY_USED, {

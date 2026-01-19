@@ -26,7 +26,10 @@ class StateStore {
             // Highlighting for stats
             selectedAbilityId: null, // For player's hover/selection
             executingAbilityId: null, // During animation
-            executingAttacker: null   // 'PLAYER' or 'OPPONENT'
+            executingAttacker: null,  // 'PLAYER' or 'OPPONENT'
+            
+            // Opponent Intent (Telegraphed to player)
+            opponentIntent: null // { abilityId, predictedDamage }
         };
 
         this._setupListeners();
