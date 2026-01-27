@@ -18,17 +18,19 @@ export class MomentumSystem {
 
     /**
      * Add momentum to a domain
+     * @param {number} decayMultiplier - Multiplier for decay (from upgrades)
      */
-    addMomentum(domain) {
+    addMomentum(domain, decayMultiplier = 1.0) {
         this.stacks[domain] = Math.min(
             MOMENTUM_CONFIG.MAX_STACKS,
             (this.stacks[domain] || 0) + 1
         );
         
         // Decay other domains
+        const decay = MOMENTUM_CONFIG.DECAY_PER_TURN * decayMultiplier;
         for (const d in this.stacks) {
             if (d !== domain) {
-                this.stacks[d] = Math.max(0, this.stacks[d] - MOMENTUM_CONFIG.DECAY_PER_TURN);
+                this.stacks[d] = Math.max(0, this.stacks[d] - decay);
             }
         }
     }

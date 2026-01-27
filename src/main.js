@@ -4,7 +4,7 @@ import { CanvasManager } from './systems/render/CanvasManager.js';
 import { RoomRenderer } from './systems/render/RoomRenderer.js';
 import { CharacterRenderer } from './systems/render/CharacterRenderer.js';
 import { StatGridRenderer } from './systems/render/StatGridRenderer.js';
-import { DirectionalButtons } from './ui/controls/DirectionalButtons.js';
+
 import { CharacterSelectMenu } from './ui/menu/CharacterSelectMenu.js';
 import { BattleMenu } from './ui/battle/BattleMenu.js';
 import { HealthBarRenderer } from './systems/render/HealthBarRenderer.js';
@@ -15,6 +15,7 @@ import { Navigator } from './systems/navigation/Navigator.js';
 import { BattleManager } from './systems/battle/BattleManager.js';
 import { BattleAnimator } from './systems/battle/BattleAnimator.js';
 import { BattleIndicatorManager } from './systems/battle/BattleIndicatorManager.js';
+import { UpgradeMenu } from './ui/menu/UpgradeMenu.js';
 import { ROOM_WIDTH, ROOM_HEIGHT, SPRITE_SIZE } from './config/dimensions.js';
 import { CHARACTER_DATA } from './data/CharacterData.js';
 import { ABILITY_POOL } from './data/AbilityData.js';
@@ -26,7 +27,6 @@ class Game {
         this.charRenderer = null;
         this.statGridRenderer = null;
         this.healthBarRenderer = null;
-        this.navControls = null;
         this.navigator = null;
         this.loop = null;
         this.textures = null;
@@ -37,6 +37,7 @@ class Game {
         this.battleAnimator = null;
         this.battleMenu = null;
         this.battleIndicators = null;
+        this.upgradeMenu = null;
     }
 
     async init() {
@@ -64,7 +65,6 @@ class Game {
         this.charRenderer = new CharacterRenderer(this.canvasManager.context, this.charSprites);
         this.statGridRenderer = new StatGridRenderer(this.canvasManager.context, this.powerIcons);
         this.healthBarRenderer = new HealthBarRenderer(this.canvasManager.context);
-        this.navControls = new DirectionalButtons('ui-layer');
         this.navigator = new Navigator();
         this.charSelectMenu = new CharacterSelectMenu('ui-layer');
         
@@ -73,6 +73,7 @@ class Game {
         this.battleManager = new BattleManager(this.battleAnimator);
         this.battleMenu = new BattleMenu('ui-layer', this.battleManager);
         this.battleIndicators = new BattleIndicatorManager();
+        this.upgradeMenu = new UpgradeMenu('ui-layer', this.battleManager);
 
         this.loop = new GameLoop();
 
@@ -148,11 +149,13 @@ class Game {
             playerHP,
             opponentHP,
             maxHP,
+            maxHPBonus,
             selectedAbilityId,
             executingAbilityId,
             executingAttacker,
             opponentIntent,
-            turn
+            turn,
+            battleCount
         } = state;
 
         const scale = 0.5;
@@ -200,7 +203,17 @@ class Game {
             // Health Bar
             const barX = horizontalMargin;
             const barY = groundY - 14;
-            this.healthBarRenderer.drawBar(barX, barY, barWidth, barHeight, playerHP, maxHP);
+            const actualMaxHP = maxHP + (maxHPBonus || 0);
+            this.healthBarRenderer.drawBar(barX, barY, barWidth, barHeight, playerHP, actualMaxHP);
+            
+            // Battle count indicator
+            const ctx = this.canvasManager.context;
+            ctx.save();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.font = 'bold 10px monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Battle: ${battleCount || 1}`, barX, groundY - gridYOffset - 20);
+            ctx.restore();
 
             // Stat Grid
             const stats = CHARACTER_DATA[playerCharacterIndex]?.stats;

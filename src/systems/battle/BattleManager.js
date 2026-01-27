@@ -15,6 +15,10 @@ export class BattleManager {
         this.entropy = new EntropySystem();
         this.cooldowns = new CooldownSystem();
         this.momentum = new MomentumSystem();
+        
+        // Upgrade modifiers
+        this.entropyBonus = 0;
+        this.momentumDecayMultiplier = 1.0;
 
         this.lastMode = null;
         this.lastTurn = null;
@@ -81,6 +85,7 @@ export class BattleManager {
     _startPlayerTurn() {
         // Regenerate entropy at turn start
         this.entropy.regenerate();
+        this.entropy.add(this.entropyBonus);
         
         // Tick down cooldowns
         this.cooldowns.tick();
@@ -126,7 +131,7 @@ export class BattleManager {
         this.cooldowns.trigger(abilityId);
 
         // Add momentum
-        this.momentum.addMomentum(ability.domain);
+        this.momentum.addMomentum(ability.domain, this.momentumDecayMultiplier);
 
         // Check for special basic actions
         if (abilityId === 'rest') {
@@ -168,8 +173,22 @@ export class BattleManager {
         // Play Animation
         this.animator.playAttackSequence('PLAYER', ability, damage, 
             () => { // On Hit
-                let newHP = Math.max(0, state.opponentHP - damage);
-                gameState.updateState({ opponentHP: newHP });
+                const currentState = gameState.getState();
+                let newHP = Math.max(0, currentState.opponentHP - damage);
+                
+                // Apply life steal if present
+                let newPlayerHP = currentState.playerHP;
+                if (currentState.lifeSteal) {
+                    newPlayerHP = Math.min(
+                        currentState.maxHP + currentState.maxHPBonus,
+                        newPlayerHP + currentState.lifeSteal
+                    );
+                }
+                
+                gameState.updateState({ 
+                    opponentHP: newHP,
+                    playerHP: newPlayerHP
+                });
 
                 globalBus.emit(EVENTS.DAMAGE_APPLIED, {
                     target: 'OPPONENT',
@@ -245,12 +264,24 @@ export class BattleManager {
     }
 
     _calculateDamage(attacker, defender, ability, isPlayer = false) {
+        const state = gameState.getState();
+        
         // domain: physical, elemental, psychic
         // type: power, finesse
-        const atkVal = attacker.stats[ability.domain][ability.damageType];
+        let atkVal = attacker.stats[ability.domain][ability.damageType];
+        
+        // Apply stat boosts (only for player)
+        if (isPlayer && state.statBoosts) {
+            atkVal += state.statBoosts[ability.domain] || 0;
+        }
         
         // Use resistance of the same domain
-        const defVal = defender.stats[ability.domain].resistance;
+        let defVal = defender.stats[ability.domain].resistance;
+        
+        // Apply defender stat boosts if defender is player
+        if (!isPlayer && state.statBoosts) {
+            defVal += state.statBoosts[ability.domain] || 0;
+        }
 
         // Simple formula: Base + (Atk * 2) - Def
         const basePower = 5;
@@ -266,11 +297,21 @@ export class BattleManager {
             damage *= this.momentum.getDamageMultiplier(ability.domain);
         }
         
+        // Apply player damage multiplier
+        if (isPlayer && state.damageMultiplier) {
+            damage *= state.damageMultiplier;
+        }
+        
+        // Enemy scaling based on battle count
+        if (!isPlayer && state.battleCount) {
+            const scaling = 1 + (state.battleCount - 1) * 0.1;
+            damage *= scaling;
+        }
+        
         // Variation
         damage += (Math.random() * 4) - 2;
 
         // Apply Guard reduction
-        const state = gameState.getState();
         if (state.playerGuarding && !isPlayer) {
             damage *= 0.5; // 50% damage reduction
         }

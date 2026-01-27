@@ -8,13 +8,17 @@ class StateStore {
             // Map / room state
             roomX: 0,
             roomY: 0,
-            previousRoomIndex: null,
+            roomHistory: [], // Last 4 rooms to avoid repetition
 
-            // High-level mode: MENU or BATTLE
+            // High-level mode: MENU, BATTLE, or UPGRADE
             mode: 'MENU',
             
             // Battle State
             turn: 'PLAYER', // 'PLAYER', 'OPPONENT', 'BUSY', 'VICTORY', 'DEFEAT'
+
+            // Progression
+            battleCount: 0,
+            highestStreak: 0,
 
             // Battle participants
             playerCharacterIndex: null,
@@ -22,6 +26,11 @@ class StateStore {
             playerHP: 0,
             opponentHP: 0,
             maxHP: 100,
+            
+            // Player upgrades/modifiers
+            statBoosts: { physical: 0, elemental: 0, psychic: 0 }, // Additive stat boosts
+            damageMultiplier: 1.0,
+            maxHPBonus: 0,
 
             // Highlighting for stats
             selectedAbilityId: null, // For player's hover/selection
@@ -64,7 +73,7 @@ class StateStore {
 
     _handleNewGame({ characterIndex }) {
         const totalRooms = GRID_COLS * GRID_ROWS;
-        const nextRoomIndex = this._getRandomRoomIndex(this.state.previousRoomIndex, totalRooms);
+        const nextRoomIndex = this._getRandomRoomIndex([], totalRooms);
 
         const roomX = nextRoomIndex % GRID_COLS;
         const roomY = Math.floor(nextRoomIndex / GRID_COLS);
@@ -76,21 +85,30 @@ class StateStore {
             turn: 'PLAYER',
             roomX,
             roomY,
-            previousRoomIndex: nextRoomIndex,
+            roomHistory: [nextRoomIndex],
+            battleCount: 1,
+            highestStreak: 0,
             playerCharacterIndex: characterIndex,
             opponentCharacterIndex: opponentIndex,
             playerHP: 100,
             opponentHP: 100,
-            maxHP: 100
+            maxHP: 100,
+            statBoosts: { physical: 0, elemental: 0, psychic: 0 },
+            damageMultiplier: 1.0,
+            maxHPBonus: 0
         });
     }
 
-    _getRandomRoomIndex(previousIndex, totalRooms) {
+    _getRandomRoomIndex(roomHistory, totalRooms) {
         if (totalRooms <= 1) return 0;
         let idx;
+        let attempts = 0;
         do {
             idx = Math.floor(Math.random() * totalRooms);
-        } while (idx === previousIndex);
+            attempts++;
+            // Fallback after many attempts to avoid infinite loop
+            if (attempts > 100) break;
+        } while (roomHistory.includes(idx));
         return idx;
     }
 
