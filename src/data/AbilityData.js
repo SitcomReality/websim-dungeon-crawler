@@ -103,5 +103,23 @@ export const ABILITY_POOL = [
         domain: 'psychic',
         damageType: 'finesse',
         tags: ['stealth']
+    },
+    
+    // Special/Basic actions
+    {
+        id: 'rest',
+        name: 'Rest & Focus',
+        description: 'Take a moment to stabilize your energy',
+        domain: 'psychic',
+        damageType: 'finesse',
+        tags: ['basic', 'utility']
+    },
+    {
+        id: 'guard',
+        name: 'Guard',
+        description: 'Brace for the next incoming assault',
+        domain: 'physical',
+        damageType: 'resistance',
+        tags: ['basic', 'utility']
     }
 ];

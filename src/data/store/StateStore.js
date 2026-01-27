@@ -27,6 +27,7 @@ class StateStore {
             selectedAbilityId: null, // For player's hover/selection
             executingAbilityId: null, // During animation
             executingAttacker: null,  // 'PLAYER' or 'OPPONENT'
+            playerGuarding: false,   // Damage reduction flag
             
             // Opponent Intent (Telegraphed to player)
             opponentIntent: null // { abilityId, predictedDamage }

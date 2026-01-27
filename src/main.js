@@ -208,6 +208,14 @@ class Game {
                 const gridX = barX + (barWidth / 2) - 15;
                 this.statGridRenderer.draw(gridX, groundY - gridYOffset, stats, playerHighlight);
             }
+
+            // Draw Guard Icon
+            if (state.playerGuarding) {
+                const ctx = this.canvasManager.context;
+                ctx.fillStyle = 'rgba(100, 200, 255, 0.6)';
+                ctx.font = '16px sans-serif';
+                ctx.fillText('🛡️', barX + barWidth + 5, groundY - 5);
+            }
         }
 
         // Opponent on the right

@@ -45,12 +45,15 @@ export class BattleManager {
             this.entropy.reset();
             this.cooldowns.reset();
             this.momentum.reset();
+            gameState.updateState({ playerGuarding: false });
         }
 
         // When it becomes the player's turn, decide the opponent's next move immediately
         if (state.mode === 'BATTLE' && state.turn === 'PLAYER' && !state.opponentIntent) {
             this._startPlayerTurn();
             this._decideOpponentIntent();
+            // Clear guard at start of player turn
+            gameState.updateState({ playerGuarding: false });
         }
 
         // If it's opponent's turn, trigger AI after delay
@@ -109,6 +112,22 @@ export class BattleManager {
 
         // Add momentum
         this.momentum.addMomentum(ability.domain);
+
+        // Check for special basic actions
+        if (abilityId === 'rest') {
+            this.entropy.add(40);
+            globalBus.emit(EVENTS.HEAL_APPLIED, { target: 'PLAYER', amount: 'RESTORING' }); // Visual cue
+            globalBus.emit(EVENTS.ABILITY_USED, { attacker: 'PLAYER', abilityId, abilityName: 'Resting...' });
+            gameState.updateState({ turn: 'OPPONENT', selectedAbilityId: null });
+            return;
+        }
+
+        if (abilityId === 'guard') {
+            gameState.updateState({ playerGuarding: true });
+            globalBus.emit(EVENTS.ABILITY_USED, { attacker: 'PLAYER', abilityId, abilityName: 'Guarding...' });
+            gameState.updateState({ turn: 'OPPONENT', selectedAbilityId: null });
+            return;
+        }
 
         // Lock turn and set executing ability
         gameState.updateState({ 
@@ -234,6 +253,12 @@ export class BattleManager {
         
         // Variation
         damage += (Math.random() * 4) - 2;
+
+        // Apply Guard reduction
+        const state = gameState.getState();
+        if (state.playerGuarding && !isPlayer) {
+            damage *= 0.5; // 50% damage reduction
+        }
 
         return Math.max(1, Math.round(damage));
     }

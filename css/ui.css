@@ -409,6 +409,39 @@
 .momentum-item.elemental .momentum-stacks { color: #99ccff; }
 .momentum-item.psychic .momentum-stacks { color: #d1b3ff; }
 
+/* Basic Actions */
+.basic-actions-list {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.basic-action-btn {
+    background: rgba(40, 40, 60, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.basic-action-btn.selected {
+    border-color: #fff;
+    background: rgba(80, 80, 120, 1);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+}
+
+.basic-action-icon {
+    font-size: 14px;
+}
+
 /* Power Domain Icons */
 .icon {
     display: inline-block;

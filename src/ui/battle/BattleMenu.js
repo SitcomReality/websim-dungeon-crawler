@@ -58,7 +58,21 @@ export class BattleMenu {
         const playerChar = CHARACTER_DATA[state.playerCharacterIndex];
         const selectedAbility = ABILITY_POOL.find(a => a.id === state.selectedAbilityId);
 
-        // 0. Render Resource Display (Entropy & Momentum)
+        // 0. Render Basic Actions (Always available)
+        const basicActionsContainer = document.createElement('div');
+        basicActionsContainer.className = 'basic-actions-list';
+        ['rest', 'guard'].forEach(id => {
+            const action = ABILITY_POOL.find(a => a.id === id);
+            const btn = document.createElement('button');
+            const isSelected = state.selectedAbilityId === id;
+            btn.className = `basic-action-btn ${isSelected ? 'selected' : ''}`;
+            btn.innerHTML = `<span class="basic-action-icon">${id === 'rest' ? '💤' : '🛡️'}</span> ${action.name}`;
+            btn.onclick = () => gameState.updateState({ selectedAbilityId: id });
+            basicActionsContainer.appendChild(btn);
+        });
+        this.element.appendChild(basicActionsContainer);
+
+        // 0.5 Render Resource Display (Entropy & Momentum)
         this._renderResourceDisplay();
 
         // 1. Render Description Panel if an ability is selected

@@ -47,6 +47,8 @@ export const ABILITY_ENTROPY_COSTS = {
     'confusion': 18,
     'fear': 20,
     'shadow_strike': 24,
+    'rest': 0,
+    'guard': 0,
 };
 
 // Ability-specific cooldowns
@@ -68,4 +70,6 @@ export const ABILITY_COOLDOWNS = {
     'confusion': 1,
     'fear': 1,
     'shadow_strike': 2,
+    'rest': 0,
+    'guard': 0,
 };
