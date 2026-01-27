@@ -5,6 +5,7 @@ import { CHARACTER_DATA } from '../../data/CharacterData.js';
 import { EntropySystem } from '../mechanics/EntropySystem.js';
 import { CooldownSystem } from '../mechanics/CooldownSystem.js';
 import { MomentumSystem } from '../mechanics/MomentumSystem.js';
+import { StatusEffectSystem } from '../mechanics/StatusEffectSystem.js';
 import { ABILITY_ENTROPY_COSTS } from '../mechanics/constants.js';
 
 export class BattleManager {
@@ -15,6 +16,7 @@ export class BattleManager {
         this.entropy = new EntropySystem();
         this.cooldowns = new CooldownSystem();
         this.momentum = new MomentumSystem();
+        this.statusEffects = new StatusEffectSystem();
         
         // Upgrade modifiers
         this.entropyBonus = 0;
@@ -43,7 +45,22 @@ export class BattleManager {
         const entropyCost = ABILITY_ENTROPY_COSTS[abilityId] || 0;
         const hasEntropy = this.entropy.value >= entropyCost;
         const isReady = this.cooldowns.isReady(abilityId);
+        
+        // Check if ability domain is locked
+        const ability = ABILITY_POOL.find(a => a.id === abilityId);
+        if (ability && this.statusEffects.isDomainLocked('PLAYER', ability.domain)) {
+            return false;
+        }
+        
         return hasEntropy && isReady;
+    }
+    
+    getPlayerStatusEffects() {
+        return this.statusEffects.getEffects('PLAYER');
+    }
+    
+    getOpponentStatusEffects() {
+        return this.statusEffects.getEffects('OPPONENT');
     }
 
     _onStateChange(state) {
@@ -60,6 +77,7 @@ export class BattleManager {
             this.entropy.reset();
             this.cooldowns.reset();
             this.momentum.reset();
+            this.statusEffects.reset();
             gameState.updateState({ 
                 playerGuarding: false,
                 opponentIntent: null,
@@ -83,6 +101,20 @@ export class BattleManager {
     }
 
     _startPlayerTurn() {
+        // Process status effects for opponent (their turn just ended)
+        const opponentEffectResults = this.statusEffects.processTurnEnd('OPPONENT', this);
+        opponentEffectResults.forEach(result => {
+            if (result.type === 'damage') {
+                const state = gameState.getState();
+                const newHP = Math.max(0, state.opponentHP - result.amount);
+                gameState.updateState({ opponentHP: newHP });
+                globalBus.emit(EVENTS.DAMAGE_APPLIED, {
+                    target: 'OPPONENT',
+                    amount: result.amount
+                });
+            }
+        });
+        
         // Regenerate entropy at turn start
         this.entropy.regenerate();
         this.entropy.add(this.entropyBonus);
@@ -98,14 +130,24 @@ export class BattleManager {
         
         if (!opponentChar || !playerChar) return;
 
-        const abilityId = opponentChar.abilities[Math.floor(Math.random() * opponentChar.abilities.length)];
+        // Filter abilities based on domain locks
+        const availableAbilities = opponentChar.abilities.filter(abilityId => {
+            const ability = ABILITY_POOL.find(a => a.id === abilityId);
+            return ability && !this.statusEffects.isDomainLocked('OPPONENT', ability.domain);
+        });
+
+        const abilityId = availableAbilities.length > 0 
+            ? availableAbilities[Math.floor(Math.random() * availableAbilities.length)]
+            : opponentChar.abilities[0]; // Fallback
+            
         const ability = ABILITY_POOL.find(a => a.id === abilityId);
-        const damage = this._calculateDamage(opponentChar, playerChar, ability);
+        const damage = this._calculateDamage(opponentChar, playerChar, ability, false);
 
         gameState.updateState({
             opponentIntent: {
                 abilityId,
-                predictedDamage: damage
+                predictedDamage: damage,
+                statusEffects: ability.statusEffects || []
             }
         });
     }
@@ -136,13 +178,15 @@ export class BattleManager {
         // Check for special basic actions
         if (abilityId === 'rest') {
             this.entropy.add(40);
-            globalBus.emit(EVENTS.HEAL_APPLIED, { target: 'PLAYER', amount: 'RESTORING' }); // Visual cue
+            this._applyStatusEffects(ability, 'PLAYER', 'PLAYER');
+            globalBus.emit(EVENTS.HEAL_APPLIED, { target: 'PLAYER', amount: 'RESTORING' });
             globalBus.emit(EVENTS.ABILITY_USED, { attacker: 'PLAYER', abilityId, abilityName: 'Resting...' });
             gameState.updateState({ turn: 'OPPONENT', selectedAbilityId: null });
             return;
         }
 
         if (abilityId === 'guard') {
+            this._applyStatusEffects(ability, 'PLAYER', 'PLAYER');
             gameState.updateState({ playerGuarding: true });
             globalBus.emit(EVENTS.ABILITY_USED, { attacker: 'PLAYER', abilityId, abilityName: 'Guarding...' });
             gameState.updateState({ turn: 'OPPONENT', selectedAbilityId: null });
@@ -175,6 +219,9 @@ export class BattleManager {
             () => { // On Hit
                 const currentState = gameState.getState();
                 let newHP = Math.max(0, currentState.opponentHP - damage);
+                
+                // Apply status effects
+                this._applyStatusEffects(ability, 'PLAYER', 'OPPONENT');
                 
                 // Apply life steal if present
                 let newPlayerHP = currentState.playerHP;
@@ -259,13 +306,34 @@ export class BattleManager {
 
         this.animator.playAttackSequence('OPPONENT', ability, damage,
             () => { // On Hit
-                let newHP = Math.max(0, state.playerHP - damage);
+                // Apply status effects
+                this._applyStatusEffects(ability, 'OPPONENT', 'PLAYER');
+                
+                // Process player status effects (their turn just ended)
+                const playerEffectResults = this.statusEffects.processTurnEnd('PLAYER', this);
+                let totalDoTDamage = 0;
+                playerEffectResults.forEach(result => {
+                    if (result.type === 'damage') {
+                        totalDoTDamage += result.amount;
+                    }
+                });
+                
+                let newHP = Math.max(0, state.playerHP - damage - totalDoTDamage);
                 gameState.updateState({ playerHP: newHP });
 
                 globalBus.emit(EVENTS.DAMAGE_APPLIED, {
                     target: 'PLAYER',
                     amount: damage
                 });
+                
+                if (totalDoTDamage > 0) {
+                    setTimeout(() => {
+                        globalBus.emit(EVENTS.DAMAGE_APPLIED, {
+                            target: 'PLAYER',
+                            amount: totalDoTDamage
+                        });
+                    }, 200);
+                }
             },
             () => { // On Complete
                 gameState.updateState({ executingAbilityId: null, executingAttacker: null });
@@ -276,6 +344,18 @@ export class BattleManager {
                 }
             }
         );
+    }
+
+    _applyStatusEffects(ability, attacker, defender) {
+        if (!ability.statusEffects) return;
+        
+        ability.statusEffects.forEach(effectData => {
+            const roll = Math.random();
+            if (roll < effectData.chance) {
+                const target = effectData.target === 'self' ? attacker : defender;
+                this.statusEffects.addEffect(target, effectData.effect);
+            }
+        });
     }
 
     _calculateDamage(attacker, defender, ability, isPlayer = false) {
@@ -322,6 +402,14 @@ export class BattleManager {
             const scaling = 1 + (state.battleCount - 1) * 0.1;
             damage *= scaling;
         }
+        
+        // Apply status effect damage modifiers (attacker's outgoing modifiers)
+        const attackerSide = isPlayer ? 'PLAYER' : 'OPPONENT';
+        damage = this.statusEffects.modifyOutgoingDamage(attackerSide, damage, ability);
+        
+        // Apply status effect incoming damage modifiers (defender's incoming modifiers)
+        const defenderSide = isPlayer ? 'OPPONENT' : 'PLAYER';
+        damage = this.statusEffects.modifyIncomingDamage(defenderSide, damage);
         
         // Variation
         damage += (Math.random() * 4) - 2;

@@ -19,6 +19,7 @@ import { UpgradeMenu } from './ui/menu/UpgradeMenu.js';
 import { ROOM_WIDTH, ROOM_HEIGHT, SPRITE_SIZE } from './config/dimensions.js';
 import { CHARACTER_DATA } from './data/CharacterData.js';
 import { ABILITY_POOL } from './data/AbilityData.js';
+import { STATUS_EFFECTS } from './systems/mechanics/StatusEffectSystem.js';
 
 class Game {
     constructor() {
@@ -108,7 +109,7 @@ class Game {
     /**
      * Draws the opponent's telegraphed move information
      */
-    _drawOpponentIntent(x, y, width, damage, domain) {
+    _drawOpponentIntent(x, y, width, damage, domain, statusEffects) {
         const ctx = this.canvasManager.context;
         const iconSize = 12;
         const padding = 2;
@@ -117,13 +118,12 @@ class Game {
         
         // Background for intent
         ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-        ctx.fillRect(x, y, width, 18);
+        ctx.fillRect(x, y, width, 26);
         ctx.strokeStyle = 'rgba(255, 40, 40, 0.4)';
         ctx.lineWidth = 1;
-        ctx.strokeRect(x, y, width, 18);
+        ctx.strokeRect(x, y, width, 26);
 
         // Icons: Resistance Icon + Domain Icon
-        // Resistance icon is top row, index 2. Domain depends on the attack.
         const centerX = x + 10;
         const centerY = y + 3;
 
@@ -139,7 +139,25 @@ class Game {
         ctx.textBaseline = 'middle';
         ctx.fillText(`${damage} DMG`, x + width - 4, y + 10);
 
+        // Status effects
+        if (statusEffects && statusEffects.length > 0) {
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'left';
+            let offsetX = x + 4;
+            statusEffects.forEach(effectData => {
+                const effectDef = this._getStatusEffectDef(effectData.effect);
+                if (effectDef) {
+                    ctx.fillText(effectDef.icon, offsetX, y + 20);
+                    offsetX += 14;
+                }
+            });
+        }
+
         ctx.restore();
+    }
+    
+    _getStatusEffectDef(effectId) {
+        return STATUS_EFFECTS[effectId];
     }
 
     _renderBattle(state) {
@@ -166,7 +184,8 @@ class Game {
 
         const barWidth = 90;
         const barHeight = 8;
-        const gridYOffset = 98; // Higher up above health bar (moved up ~2 cell heights)
+        const gridYOffset = 98;
+        const statusEffectSpacing = 16;
 
         // Determine highlights
         let playerHighlight = null;
@@ -205,6 +224,10 @@ class Game {
             const barY = groundY - 14;
             const actualMaxHP = maxHP + (maxHPBonus || 0);
             this.healthBarRenderer.drawBar(barX, barY, barWidth, barHeight, playerHP, actualMaxHP);
+            
+            // Status Effects
+            const playerEffects = this.battleManager.getPlayerStatusEffects();
+            this._drawStatusEffects(barX, barY - statusEffectSpacing, playerEffects);
             
             // Battle count indicator
             const ctx = this.canvasManager.context;
@@ -249,6 +272,10 @@ class Game {
             const barX = opponentBaseX;
             const barY = groundY - 14;
             this.healthBarRenderer.drawBar(barX, barY, barWidth, barHeight, opponentHP, maxHP, predictedDamageForOpponent);
+            
+            // Status Effects
+            const opponentEffects = this.battleManager.getOpponentStatusEffects();
+            this._drawStatusEffects(barX, barY - statusEffectSpacing, opponentEffects);
 
             // Stat Grid
             const stats = CHARACTER_DATA[opponentCharacterIndex]?.stats;
@@ -262,7 +289,7 @@ class Game {
                 const intentY = barY + barHeight + 4;
                 const ability = ABILITY_POOL.find(a => a.id === opponentIntent.abilityId);
                 if (ability) {
-                    this._drawOpponentIntent(barX, intentY, barWidth, opponentIntent.predictedDamage, ability.domain);
+                    this._drawOpponentIntent(barX, intentY, barWidth, opponentIntent.predictedDamage, ability.domain, opponentIntent.statusEffects);
                 }
             }
         }
@@ -274,6 +301,34 @@ class Game {
         if (this.battleIndicators) {
             this.battleIndicators.draw(this.canvasManager.context);
         }
+    }
+    
+    _drawStatusEffects(x, y, effects) {
+        if (!effects || effects.length === 0) return;
+        
+        const ctx = this.canvasManager.context;
+        ctx.save();
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'left';
+        
+        let offsetX = x;
+        effects.forEach(effect => {
+            // Icon
+            ctx.fillText(effect.icon, offsetX, y);
+            
+            // Turns remaining (small number)
+            ctx.font = 'bold 8px monospace';
+            ctx.fillStyle = '#fff';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.strokeText(effect.turnsRemaining, offsetX + 10, y);
+            ctx.fillText(effect.turnsRemaining, offsetX + 10, y);
+            ctx.font = '12px sans-serif';
+            
+            offsetX += 18;
+        });
+        
+        ctx.restore();
     }
 }
 

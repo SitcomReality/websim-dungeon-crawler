@@ -3,6 +3,7 @@ import { gameState } from '../../data/store/StateStore.js';
 import { CHARACTER_DATA } from '../../data/CharacterData.js';
 import { ABILITY_POOL } from '../../data/AbilityData.js';
 import { ABILITY_ENTROPY_COSTS } from '../../systems/mechanics/constants.js';
+import { STATUS_EFFECTS } from '../../systems/mechanics/StatusEffectSystem.js';
 
 export class BattleMenu {
     constructor(containerId, battleManager) {
@@ -82,6 +83,22 @@ export class BattleMenu {
 
             const detailPanel = document.createElement('div');
             detailPanel.className = 'ability-detail-panel';
+            
+            // Build status effects display
+            let statusEffectsHtml = '';
+            if (selectedAbility.statusEffects && selectedAbility.statusEffects.length > 0) {
+                statusEffectsHtml = '<div class="detail-status-effects">';
+                selectedAbility.statusEffects.forEach(effectData => {
+                    const effectDef = this._getStatusEffectDef(effectData.effect);
+                    if (effectDef) {
+                        const chance = Math.round(effectData.chance * 100);
+                        const target = effectData.target === 'self' ? 'you' : 'enemy';
+                        statusEffectsHtml += `<span class="status-effect-tag" style="color: ${effectDef.color}">${effectDef.icon} ${effectDef.name} (${chance}% on ${target})</span>`;
+                    }
+                });
+                statusEffectsHtml += '</div>';
+            }
+            
             detailPanel.innerHTML = `
                 <div class="detail-header">
                     <span class="detail-name">${selectedAbility.name}</span>
@@ -95,6 +112,7 @@ export class BattleMenu {
                     ${predictedDamage !== null ? `<span class="detail-prediction">Deals approx. <strong>${predictedDamage}</strong> damage</span>` : ''}
                     <span>Uses <i class="icon ${selectedAbility.damageType}"></i> ${selectedAbility.damageType}</span>
                 </div>
+                ${statusEffectsHtml}
                 <button class="confirm-ability-btn">Execute Action</button>
             `;
             
@@ -118,13 +136,16 @@ export class BattleMenu {
             const entropyCost = ABILITY_ENTROPY_COSTS[abilityId] || 0;
             const cooldown = this.battleManager.getCooldown(abilityId);
             const canUse = this.battleManager.canUseAbility(abilityId);
+            const isLocked = this.battleManager.statusEffects.isDomainLocked('PLAYER', ability.domain);
 
             const btn = document.createElement('button');
             const isSelected = this.selectedAbilityId === ability.id;
             btn.className = `ability-btn ${ability.domain} ${isSelected ? 'selected' : ''} ${!canUse ? 'disabled' : ''}`;
             
             let statusText = '';
-            if (cooldown > 0) {
+            if (isLocked) {
+                statusText = `<span class="ability-locked">🔒 Locked</span>`;
+            } else if (cooldown > 0) {
                 statusText = `<span class="ability-cooldown">${cooldown} turn${cooldown > 1 ? 's' : ''}</span>`;
             } else if (!canUse) {
                 statusText = `<span class="ability-cost-high">${entropyCost}E</span>`;
@@ -151,6 +172,10 @@ export class BattleMenu {
         });
 
         this.element.appendChild(buttonList);
+    }
+    
+    _getStatusEffectDef(effectId) {
+        return STATUS_EFFECTS[effectId];
     }
 
     _renderResourceDisplay() {

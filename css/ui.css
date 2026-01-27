@@ -252,6 +252,28 @@
     color: #fff;
 }
 
+.detail-status-effects {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.status-effect-tag {
+    font-size: 10px;
+    padding: 2px 6px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    border: 1px solid currentColor;
+    opacity: 0.9;
+}
+
+.ability-locked {
+    font-size: 9px;
+    color: #ff4444;
+    font-weight: bold;
+}
+
 .confirm-ability-btn {
     background: #2e7d32;
     border: 2px solid #4caf50;
