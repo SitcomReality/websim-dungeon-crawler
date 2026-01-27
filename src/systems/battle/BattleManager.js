@@ -15,6 +15,9 @@ export class BattleManager {
         this.entropy = new EntropySystem();
         this.cooldowns = new CooldownSystem();
         this.momentum = new MomentumSystem();
+
+        this.lastMode = null;
+        this.lastTurn = null;
         
         globalBus.on(EVENTS.PLAYER_ACTION, this._handlePlayerAction.bind(this));
         globalBus.on(EVENTS.STATE_CHANGED, this._onStateChange.bind(this));
@@ -40,24 +43,36 @@ export class BattleManager {
     }
 
     _onStateChange(state) {
-        // Reset systems on new battle
-        if (state.mode === 'BATTLE' && state.turn === 'PLAYER' && state.playerHP === state.maxHP) {
+        const modeChanged = state.mode !== this.lastMode;
+        const turnChanged = state.turn !== this.lastTurn;
+        
+        this.lastMode = state.mode;
+        this.lastTurn = state.turn;
+
+        if (state.mode !== 'BATTLE') return;
+
+        // Reset systems on entering BATTLE mode
+        if (modeChanged) {
             this.entropy.reset();
             this.cooldowns.reset();
             this.momentum.reset();
-            gameState.updateState({ playerGuarding: false });
+            gameState.updateState({ 
+                playerGuarding: false,
+                opponentIntent: null,
+                selectedAbilityId: null,
+                executingAbilityId: null
+            });
         }
 
-        // When it becomes the player's turn, decide the opponent's next move immediately
-        if (state.mode === 'BATTLE' && state.turn === 'PLAYER' && !state.opponentIntent) {
+        // When it transitions to the player's turn
+        if (turnChanged && state.turn === 'PLAYER') {
             this._startPlayerTurn();
             this._decideOpponentIntent();
-            // Clear guard at start of player turn
             gameState.updateState({ playerGuarding: false });
         }
 
-        // If it's opponent's turn, trigger AI after delay
-        if (state.mode === 'BATTLE' && state.turn === 'OPPONENT') {
+        // If it's opponent's turn, trigger AI after delay (only on transition)
+        if (turnChanged && state.turn === 'OPPONENT') {
             // Small delay for pacing
             setTimeout(() => this._performOpponentTurn(), 1000);
         }

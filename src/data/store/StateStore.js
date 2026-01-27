@@ -105,6 +105,16 @@ class StateStore {
     }
 
     updateState(newState) {
+        let changed = false;
+        for (const key in newState) {
+            if (this.state[key] !== newState[key]) {
+                changed = true;
+                break;
+            }
+        }
+        
+        if (!changed) return;
+
         this.state = { ...this.state, ...newState };
         globalBus.emit(EVENTS.STATE_CHANGED, this.state);
     }
