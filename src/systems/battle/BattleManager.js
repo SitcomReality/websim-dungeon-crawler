@@ -206,6 +206,21 @@ export class BattleManager {
         );
     }
 
+    getPredictedDamage(abilityId, isPlayerAttacking = true) {
+        const state = gameState.getState();
+        const ability = ABILITY_POOL.find(a => a.id === abilityId);
+        if (!ability) return 0;
+
+        const playerChar = CHARACTER_DATA[state.playerCharacterIndex];
+        const opponentChar = CHARACTER_DATA[state.opponentCharacterIndex];
+
+        if (isPlayerAttacking) {
+            return this._calculateDamage(playerChar, opponentChar, ability, true);
+        } else {
+            return this._calculateDamage(opponentChar, playerChar, ability, false);
+        }
+    }
+
     _performOpponentTurn() {
         const state = gameState.getState();
         // Check if battle ended during delay

@@ -233,6 +233,23 @@
     font-size: 11px;
     color: #aaa;
     margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.detail-prediction {
+    color: #ff8888;
+    background: rgba(255, 0, 0, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 0, 0, 0.2);
+}
+
+.detail-prediction strong {
+    font-size: 14px;
+    color: #fff;
 }
 
 .confirm-ability-btn {

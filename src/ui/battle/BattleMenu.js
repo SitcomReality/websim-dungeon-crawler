@@ -77,6 +77,9 @@ export class BattleMenu {
 
         // 1. Render Description Panel if an ability is selected
         if (selectedAbility) {
+            const isOffensive = !['rest', 'guard'].includes(selectedAbility.id);
+            const predictedDamage = isOffensive ? this.battleManager.getPredictedDamage(selectedAbility.id, true) : null;
+
             const detailPanel = document.createElement('div');
             detailPanel.className = 'ability-detail-panel';
             detailPanel.innerHTML = `
@@ -89,8 +92,8 @@ export class BattleMenu {
                 </div>
                 <div class="detail-desc">${selectedAbility.description}</div>
                 <div class="detail-stats">
-                    Uses <i class="icon ${selectedAbility.damageType}"></i> 
-                    ${selectedAbility.damageType} attribute
+                    ${predictedDamage !== null ? `<span class="detail-prediction">Deals approx. <strong>${predictedDamage}</strong> damage</span>` : ''}
+                    <span>Uses <i class="icon ${selectedAbility.damageType}"></i> ${selectedAbility.damageType}</span>
                 </div>
                 <button class="confirm-ability-btn">Execute Action</button>
             `;

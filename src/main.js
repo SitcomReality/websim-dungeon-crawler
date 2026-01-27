@@ -239,10 +239,16 @@ class Game {
             const opponentY = groundY + opponentOffset.y;
             this.charRenderer.drawCharacter(opponentCharacterIndex, opponentX, opponentY, { flipped: true, scale });
 
+            // Calculate predicted damage for health bar highlight
+            let predictedDamageForOpponent = 0;
+            if (turn === 'PLAYER' && selectedAbilityId && !['rest', 'guard'].includes(selectedAbilityId)) {
+                predictedDamageForOpponent = this.battleManager.getPredictedDamage(selectedAbilityId, true);
+            }
+
             // Health Bar
             const barX = opponentBaseX;
             const barY = groundY - 14;
-            this.healthBarRenderer.drawBar(barX, barY, barWidth, barHeight, opponentHP, maxHP);
+            this.healthBarRenderer.drawBar(barX, barY, barWidth, barHeight, opponentHP, maxHP, predictedDamageForOpponent);
 
             // Stat Grid
             const stats = CHARACTER_DATA[opponentCharacterIndex]?.stats;
