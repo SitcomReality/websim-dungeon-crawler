@@ -2,15 +2,26 @@ import { globalBus, EVENTS } from '../../core/events/EventBus.js';
 import { gameState } from '../../data/store/StateStore.js';
 import { CHARACTER_DATA } from '../../data/CharacterData.js';
 import { ABILITY_POOL } from '../../data/AbilityData.js';
+import { ABILITY_ENTROPY_COSTS } from '../../systems/mechanics/constants.js';
 
 export class BattleMenu {
-    constructor(containerId) {
+    constructor(containerId, battleManager) {
         this.container = document.getElementById(containerId);
+        this.battleManager = battleManager;
         this.element = null;
         this.selectedAbilityId = null;
         this._setup();
         
         globalBus.on(EVENTS.STATE_CHANGED, this._onStateChange.bind(this));
+        globalBus.on(EVENTS.TICK, this._onTick.bind(this));
+    }
+
+    _onTick() {
+        // Update UI if visible
+        const state = gameState.getState();
+        if (state.mode === 'BATTLE' && state.turn === 'PLAYER') {
+            this._updateResourceDisplays();
+        }
     }
 
     _setup() {
@@ -46,6 +57,9 @@ export class BattleMenu {
 
         const playerChar = CHARACTER_DATA[state.playerCharacterIndex];
         const selectedAbility = ABILITY_POOL.find(a => a.id === state.selectedAbilityId);
+
+        // 0. Render Resource Display (Entropy & Momentum)
+        this._renderResourceDisplay();
 
         // 1. Render Description Panel if an ability is selected
         if (selectedAbility) {
@@ -84,24 +98,101 @@ export class BattleMenu {
             const ability = ABILITY_POOL.find(a => a.id === abilityId);
             if (!ability) return;
 
+            const entropyCost = ABILITY_ENTROPY_COSTS[abilityId] || 0;
+            const cooldown = this.battleManager.getCooldown(abilityId);
+            const canUse = this.battleManager.canUseAbility(abilityId);
+
             const btn = document.createElement('button');
             const isSelected = this.selectedAbilityId === ability.id;
-            btn.className = `ability-btn ${ability.domain} ${isSelected ? 'selected' : ''}`;
+            btn.className = `ability-btn ${ability.domain} ${isSelected ? 'selected' : ''} ${!canUse ? 'disabled' : ''}`;
+            
+            let statusText = '';
+            if (cooldown > 0) {
+                statusText = `<span class="ability-cooldown">${cooldown} turn${cooldown > 1 ? 's' : ''}</span>`;
+            } else if (!canUse) {
+                statusText = `<span class="ability-cost-high">${entropyCost}E</span>`;
+            } else {
+                statusText = `<span class="ability-cost">${entropyCost}E</span>`;
+            }
+
             btn.innerHTML = `
                 <span class="ability-name">${ability.name}</span>
                 <span class="ability-type">
                     <i class="icon ${ability.damageType}"></i>
                     ${ability.damageType}
                 </span>
+                ${statusText}
             `;
             
             btn.onclick = () => {
-                gameState.updateState({ selectedAbilityId: ability.id });
+                if (canUse) {
+                    gameState.updateState({ selectedAbilityId: ability.id });
+                }
             };
 
             buttonList.appendChild(btn);
         });
 
         this.element.appendChild(buttonList);
+    }
+
+    _renderResourceDisplay() {
+        const resourcePanel = document.createElement('div');
+        resourcePanel.className = 'resource-panel';
+        resourcePanel.id = 'resource-display';
+        
+        // Entropy bar
+        const entropy = this.battleManager.getEntropy();
+        const entropyBar = document.createElement('div');
+        entropyBar.className = 'resource-item';
+        entropyBar.innerHTML = `
+            <div class="resource-label">Entropy</div>
+            <div class="resource-bar-container">
+                <div class="resource-bar entropy-bar" style="width: ${entropy}%"></div>
+                <div class="resource-value">${Math.round(entropy)}</div>
+            </div>
+        `;
+        
+        // Momentum display
+        const momentum = document.createElement('div');
+        momentum.className = 'resource-item momentum-display';
+        const domains = ['physical', 'elemental', 'psychic'];
+        const momentumHtml = domains.map(d => {
+            const stacks = this.battleManager.getMomentum(d);
+            return `
+                <div class="momentum-item ${d}">
+                    <i class="icon ${d}"></i>
+                    <span class="momentum-stacks">${stacks}</span>
+                </div>
+            `;
+        }).join('');
+        momentum.innerHTML = `
+            <div class="resource-label">Momentum</div>
+            <div class="momentum-grid">${momentumHtml}</div>
+        `;
+        
+        resourcePanel.appendChild(entropyBar);
+        resourcePanel.appendChild(momentum);
+        this.element.appendChild(resourcePanel);
+    }
+
+    _updateResourceDisplays() {
+        const display = document.getElementById('resource-display');
+        if (!display) return;
+
+        // Update entropy bar
+        const entropy = this.battleManager.getEntropy();
+        const entropyBar = display.querySelector('.entropy-bar');
+        const entropyValue = display.querySelector('.resource-value');
+        if (entropyBar) entropyBar.style.width = `${entropy}%`;
+        if (entropyValue) entropyValue.textContent = Math.round(entropy);
+
+        // Update momentum stacks
+        const domains = ['physical', 'elemental', 'psychic'];
+        domains.forEach(d => {
+            const stacks = this.battleManager.getMomentum(d);
+            const stacksEl = display.querySelector(`.momentum-item.${d} .momentum-stacks`);
+            if (stacksEl) stacksEl.textContent = stacks;
+        });
     }
 }

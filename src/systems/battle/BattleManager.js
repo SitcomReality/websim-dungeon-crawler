@@ -2,18 +2,54 @@ import { globalBus, EVENTS } from '../../core/events/EventBus.js';
 import { gameState } from '../../data/store/StateStore.js';
 import { ABILITY_POOL } from '../../data/AbilityData.js';
 import { CHARACTER_DATA } from '../../data/CharacterData.js';
+import { EntropySystem } from '../mechanics/EntropySystem.js';
+import { CooldownSystem } from '../mechanics/CooldownSystem.js';
+import { MomentumSystem } from '../mechanics/MomentumSystem.js';
+import { ABILITY_ENTROPY_COSTS } from '../mechanics/constants.js';
 
 export class BattleManager {
     constructor(animator) {
         this.animator = animator;
         
+        // Initialize game systems
+        this.entropy = new EntropySystem();
+        this.cooldowns = new CooldownSystem();
+        this.momentum = new MomentumSystem();
+        
         globalBus.on(EVENTS.PLAYER_ACTION, this._handlePlayerAction.bind(this));
         globalBus.on(EVENTS.STATE_CHANGED, this._onStateChange.bind(this));
     }
 
+    getEntropy() {
+        return this.entropy.value;
+    }
+
+    getCooldown(abilityId) {
+        return this.cooldowns.getRemaining(abilityId);
+    }
+
+    getMomentum(domain) {
+        return this.momentum.getStacks(domain);
+    }
+
+    canUseAbility(abilityId) {
+        const entropyCost = ABILITY_ENTROPY_COSTS[abilityId] || 0;
+        const hasEntropy = this.entropy.value >= entropyCost;
+        const isReady = this.cooldowns.isReady(abilityId);
+        return hasEntropy && isReady;
+    }
+
     _onStateChange(state) {
+        // Reset systems on new battle
+        if (state.mode === 'BATTLE' && state.turn === 'PLAYER' && state.playerHP === state.maxHP) {
+            this.entropy.reset();
+            this.cooldowns.reset();
+            this.momentum.reset();
+        }
+
         // When it becomes the player's turn, decide the opponent's next move immediately
         if (state.mode === 'BATTLE' && state.turn === 'PLAYER' && !state.opponentIntent) {
+            this._startPlayerTurn();
             this._decideOpponentIntent();
         }
 
@@ -22,6 +58,14 @@ export class BattleManager {
             // Small delay for pacing
             setTimeout(() => this._performOpponentTurn(), 1000);
         }
+    }
+
+    _startPlayerTurn() {
+        // Regenerate entropy at turn start
+        this.entropy.regenerate();
+        
+        // Tick down cooldowns
+        this.cooldowns.tick();
     }
 
     _decideOpponentIntent() {
@@ -47,6 +91,25 @@ export class BattleManager {
         const state = gameState.getState();
         if (state.turn !== 'PLAYER' || state.mode !== 'BATTLE') return;
 
+        // Check if ability can be used
+        if (!this.canUseAbility(abilityId)) {
+            console.warn('Ability not ready or insufficient entropy');
+            return;
+        }
+
+        const ability = ABILITY_POOL.find(a => a.id === abilityId);
+        if (!ability) return;
+
+        // Consume entropy
+        const entropyCost = ABILITY_ENTROPY_COSTS[abilityId] || 0;
+        this.entropy.consume(entropyCost);
+
+        // Trigger cooldown
+        this.cooldowns.trigger(abilityId);
+
+        // Add momentum
+        this.momentum.addMomentum(ability.domain);
+
         // Lock turn and set executing ability
         gameState.updateState({ 
             turn: 'BUSY', 
@@ -56,10 +119,7 @@ export class BattleManager {
         });
 
         const playerChar = CHARACTER_DATA[state.playerCharacterIndex];
-        const ability = ABILITY_POOL.find(a => a.id === abilityId);
         const opponentChar = CHARACTER_DATA[state.opponentCharacterIndex];
-
-        if (!ability) return;
 
         // Broadcast ability used for UI indicators
         globalBus.emit(EVENTS.ABILITY_USED, {
@@ -69,7 +129,7 @@ export class BattleManager {
         });
 
         // Calculate damage
-        const damage = this._calculateDamage(playerChar, opponentChar, ability);
+        const damage = this._calculateDamage(playerChar, opponentChar, ability, true);
 
         // Play Animation
         this.animator.playAttackSequence('PLAYER', ability, damage, 
@@ -107,7 +167,6 @@ export class BattleManager {
         }
 
         const abilityId = intent.abilityId;
-        const damage = intent.predictedDamage;
 
         gameState.updateState({ 
             turn: 'BUSY',
@@ -119,6 +178,9 @@ export class BattleManager {
         const opponentChar = CHARACTER_DATA[state.opponentCharacterIndex];
         const playerChar = CHARACTER_DATA[state.playerCharacterIndex];
         const ability = ABILITY_POOL.find(a => a.id === abilityId);
+
+        // Recalculate damage with current systems state
+        const damage = this._calculateDamage(opponentChar, playerChar, ability, false);
 
         // Broadcast ability used for UI indicators
         globalBus.emit(EVENTS.ABILITY_USED, {
@@ -148,7 +210,7 @@ export class BattleManager {
         );
     }
 
-    _calculateDamage(attacker, defender, ability) {
+    _calculateDamage(attacker, defender, ability, isPlayer = false) {
         // domain: physical, elemental, psychic
         // type: power, finesse
         const atkVal = attacker.stats[ability.domain][ability.damageType];
@@ -157,9 +219,18 @@ export class BattleManager {
         const defVal = defender.stats[ability.domain].resistance;
 
         // Simple formula: Base + (Atk * 2) - Def
-        // Abilities might have base power, but for now assume base 5
         const basePower = 5;
         let damage = basePower + (atkVal * 2.5) - (defVal * 1.5);
+        
+        // Apply entropy multiplier (only for player to make it meaningful)
+        if (isPlayer) {
+            damage *= this.entropy.getDamageMultiplier();
+        }
+        
+        // Apply momentum multiplier (only for player)
+        if (isPlayer) {
+            damage *= this.momentum.getDamageMultiplier(ability.domain);
+        }
         
         // Variation
         damage += (Math.random() * 4) - 2;

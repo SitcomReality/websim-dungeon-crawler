@@ -71,7 +71,7 @@ class Game {
         // Battle Systems
         this.battleAnimator = new BattleAnimator();
         this.battleManager = new BattleManager(this.battleAnimator);
-        this.battleMenu = new BattleMenu('ui-layer');
+        this.battleMenu = new BattleMenu('ui-layer', this.battleManager);
         this.battleIndicators = new BattleIndicatorManager();
 
         this.loop = new GameLoop();
