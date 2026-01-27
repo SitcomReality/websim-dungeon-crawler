@@ -16,6 +16,7 @@ import { BattleManager } from './systems/battle/BattleManager.js';
 import { BattleAnimator } from './systems/battle/BattleAnimator.js';
 import { BattleIndicatorManager } from './systems/battle/BattleIndicatorManager.js';
 import { UpgradeMenu } from './ui/menu/UpgradeMenu.js';
+import { GameOverMenu } from './ui/menu/GameOverMenu.js';
 import { ROOM_WIDTH, ROOM_HEIGHT, SPRITE_SIZE } from './config/dimensions.js';
 import { CHARACTER_DATA } from './data/CharacterData.js';
 import { ABILITY_POOL } from './data/AbilityData.js';
@@ -75,6 +76,7 @@ class Game {
         this.battleMenu = new BattleMenu('ui-layer', this.battleManager);
         this.battleIndicators = new BattleIndicatorManager();
         this.upgradeMenu = new UpgradeMenu('ui-layer', this.battleManager);
+        this.gameOverMenu = new GameOverMenu('ui-layer');
 
         this.loop = new GameLoop();
 

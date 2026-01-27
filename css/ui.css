@@ -510,6 +510,61 @@
     gap: 4px;
 }
 
+/* Game Over Menu */
+.game-over-menu {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    background: radial-gradient(circle at center, rgba(60, 0, 0, 0.95), rgba(0, 0, 0, 1));
+    color: white;
+    z-index: 30;
+    padding: 20px;
+    text-align: center;
+}
+
+.game-over-title {
+    font-size: 42px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: #ff5252;
+    text-shadow: 0 0 20px rgba(255, 82, 82, 0.6);
+}
+
+.game-over-stats {
+    margin-bottom: 40px;
+    font-size: 18px;
+    line-height: 1.6;
+    color: #ccc;
+}
+
+.game-over-stats strong {
+    color: #fff;
+    font-size: 24px;
+}
+
+.retry-btn {
+    padding: 14px 30px;
+    font-size: 18px;
+    background: #333;
+    border: 2px solid #555;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.retry-btn:active {
+    transform: scale(0.95);
+    background: #444;
+}
+
 /* Upgrade Menu */
 .upgrade-menu {
     position: absolute;
