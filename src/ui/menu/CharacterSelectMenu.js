@@ -3,7 +3,7 @@ import { CHARACTER_DATA } from '../../data/CharacterData.js';
 import { ABILITY_POOL } from '../../data/AbilityData.js';
 import { ASSETS } from '../../config/assets.js';
 import { SPRITE_SIZE } from '../../config/dimensions.js';
-import { StatGridRenderer } from '../render/StatGridRenderer.js';
+import { StatGridRenderer } from '../../systems/render/StatGridRenderer.js';
 
 export class CharacterSelectMenu {
     constructor(containerId) {
