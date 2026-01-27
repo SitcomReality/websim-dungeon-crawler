@@ -24,6 +24,7 @@ export class BattleManager {
 
         this.lastMode = null;
         this.lastTurn = null;
+        this.lastBattleCount = null;
         
         globalBus.on(EVENTS.PLAYER_ACTION, this._handlePlayerAction.bind(this));
         globalBus.on(EVENTS.STATE_CHANGED, this._onStateChange.bind(this));
@@ -66,18 +67,21 @@ export class BattleManager {
     _onStateChange(state) {
         const modeChanged = state.mode !== this.lastMode;
         const turnChanged = state.turn !== this.lastTurn;
+        const battleChanged = state.battleCount !== this.lastBattleCount;
         
         this.lastMode = state.mode;
         this.lastTurn = state.turn;
+        this.lastBattleCount = state.battleCount;
 
         if (state.mode !== 'BATTLE') return;
 
-        // Reset systems on entering BATTLE mode
-        if (modeChanged) {
+        // Reset systems on entering BATTLE mode OR starting a new battle in the same mode
+        if (modeChanged || battleChanged) {
             this.entropy.reset();
             this.cooldowns.reset();
             this.momentum.reset();
             this.statusEffects.reset();
+            
             gameState.updateState({ 
                 playerGuarding: false,
                 opponentIntent: null,

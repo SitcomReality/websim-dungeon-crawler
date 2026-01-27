@@ -9,6 +9,21 @@ export class BattleIndicatorManager {
         globalBus.on(EVENTS.DAMAGE_APPLIED, this._onDamage.bind(this));
         globalBus.on(EVENTS.HEAL_APPLIED, this._onHeal.bind(this));
         globalBus.on(EVENTS.ABILITY_USED, this._onAbilityUsed.bind(this));
+        globalBus.on(EVENTS.STATE_CHANGED, this._onStateChange.bind(this));
+        
+        this.lastBattleCount = null;
+    }
+
+    _onStateChange(state) {
+        if (state.battleCount !== this.lastBattleCount) {
+            this.lastBattleCount = state.battleCount;
+            this.clear();
+        }
+    }
+
+    clear() {
+        this.indicators = [];
+        this.abilityBanner = null;
     }
 
     _onDamage({ target, amount }) {

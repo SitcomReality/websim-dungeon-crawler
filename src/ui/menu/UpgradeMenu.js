@@ -154,8 +154,7 @@ export class UpgradeMenu {
             opponentIntent: null
         });
         
-        // Reset battle systems
-        this.battleManager.cooldowns.reset();
+        // Battle systems will be reset by BattleManager observing the battleCount change
     }
 
     _getRandomRoomIndex(roomHistory, totalRooms) {
