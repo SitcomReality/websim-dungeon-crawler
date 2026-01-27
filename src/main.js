@@ -69,6 +69,7 @@ class Game {
         this.healthBarRenderer = new HealthBarRenderer(this.canvasManager.context);
         this.navigator = new Navigator();
         this.charSelectMenu = new CharacterSelectMenu('ui-layer');
+        this.charSelectMenu.setIconsImage(this.powerIcons);
         
         // Battle Systems
         this.battleAnimator = new BattleAnimator();

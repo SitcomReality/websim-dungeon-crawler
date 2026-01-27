@@ -50,35 +50,40 @@
 }
 .nav-btn.east:active { transform: translateY(-50%) scale(0.95); }
 
-/* Character selection menu - Carousel Style */
-.char-select-carousel {
+/* Character selection menu - Redesigned */
+.char-select-screen {
     position: absolute;
     inset: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    padding-top: 20px;
+    padding-bottom: 20px;
     pointer-events: auto;
-    background: radial-gradient(circle at center, rgba(0,0,0,0.85), rgba(0,0,0,1));
+    background: radial-gradient(circle at center, rgba(15, 5, 25, 0.95), rgba(0,0,0,1));
     color: white;
     z-index: 10;
+    overflow-y: auto;
 }
 
 .selected-char-name {
-    font-size: 24px;
-    margin-bottom: 20px;
+    font-size: 28px;
+    margin-bottom: 10px;
     text-transform: uppercase;
-    letter-spacing: 2px;
-    text-shadow: 0 0 10px rgba(255,255,255,0.3);
+    letter-spacing: 3px;
+    text-shadow: 0 0 15px rgba(156, 39, 176, 0.6);
+    color: #e1bee7;
 }
 
 .carousel-container {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 30px;
+    margin-bottom: 15px;
     width: 100%;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .sprite-display-area {
@@ -90,24 +95,24 @@
 }
 
 .char-preview-sprite {
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
     background-repeat: no-repeat;
     transition: all 0.3s ease;
 }
 
 .char-preview-sprite.curr {
-    width: 160px;
-    height: 160px;
+    width: 120px;
+    height: 120px;
     z-index: 2;
-    filter: drop-shadow(0 0 15px rgba(255,255,255,0.2));
+    filter: drop-shadow(0 0 15px rgba(156, 39, 176, 0.4));
 }
 
 .char-preview-sprite.prev, .char-preview-sprite.next {
-    width: 80px;
-    height: 80px;
-    opacity: 0.4;
-    filter: grayscale(0.5);
+    width: 60px;
+    height: 60px;
+    opacity: 0.3;
+    filter: grayscale(1.0);
     z-index: 1;
 }
 
@@ -131,18 +136,95 @@
     transform: scale(0.9);
 }
 
+.char-info-panel {
+    display: flex;
+    width: 95%;
+    max-width: 400px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 15px;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.info-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: bold;
+    color: #aaa;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+}
+
+.char-stats-area {
+    flex: 0 0 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.char-abilities-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-abilities-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.menu-ability-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 6px 8px;
+    border-radius: 4px;
+    border-left: 3px solid #555;
+}
+
+.menu-ability-item.physical { border-left-color: #cd5c5c; }
+.menu-ability-item.elemental { border-left-color: #4682b4; }
+.menu-ability-item.psychic { border-left-color: #9370db; }
+
+.menu-ability-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.m-ability-name {
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+}
+
+.m-ability-domain {
+    font-size: 8px;
+    text-transform: uppercase;
+    opacity: 0.6;
+}
+
+.m-ability-desc {
+    font-size: 10px;
+    color: #ccc;
+    line-height: 1.2;
+}
+
 .confirm-game-btn {
-    padding: 12px 30px;
-    font-size: 18px;
+    padding: 12px 40px;
+    font-size: 20px;
     background: #4a148c;
     border: 2px solid #7b1fa2;
     color: white;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: 6px;
     box-shadow: 0 4px 0 #310d5e;
     transition: transform 0.1s, box-shadow 0.1s;
+    flex-shrink: 0;
 }
 
 .confirm-game-btn:active {
