@@ -122,8 +122,8 @@ export const ABILITY_POOL = [
     // Special/Basic actions
     {
         id: 'rest',
-        name: 'Existential Crisis',
-        description: 'Contemplate mortality while recovering energy',
+        name: 'Rest & Focus',
+        description: 'Recover entropy and fortify defenses for the next turn',
         domain: 'psychic',
         damageType: 'finesse',
         tags: ['basic', 'utility'],
@@ -131,8 +131,8 @@ export const ABILITY_POOL = [
     },
     {
         id: 'guard',
-        name: 'Cowardice',
-        description: 'Hide behind something sturdy',
+        name: 'Guard',
+        description: 'Adopt a defensive stance to reduce incoming damage',
         domain: 'physical',
         damageType: 'resistance',
         tags: ['basic', 'utility'],
