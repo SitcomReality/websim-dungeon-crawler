@@ -109,8 +109,11 @@ export class UpgradeMenu {
     _selectUpgrade(upgrade) {
         const state = gameState.getState();
         
-        // Apply upgrade effect
+        // Apply upgrade effect (mutates state object)
         upgrade.apply(state, this.battleManager);
+        
+        // Persist modified state back into the store so changes (heals, stat boosts, HP increases, etc.) take effect
+        gameState.updateState(state);
         
         // Start next battle
         this._startNextBattle();
