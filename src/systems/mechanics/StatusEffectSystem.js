@@ -102,7 +102,7 @@ export const STATUS_EFFECTS = {
         icon: '💪',
         color: '#44ff88',
         duration: 2,
-        modifyDamage: (damage) => damage * 1.2 // 20% bonus to all damage
+        modifyDamage: (damage) => damage * 1.2
     },
     FORTIFIED: {
         id: 'fortified',
@@ -110,7 +110,58 @@ export const STATUS_EFFECTS = {
         icon: '🛡️',
         color: '#88ccff',
         duration: 2,
-        modifyIncomingDamage: (damage) => damage * 0.75 // Takes 25% less damage
+        modifyIncomingDamage: (damage) => damage * 0.75
+    },
+    ENRAGED: {
+        id: 'enraged',
+        name: 'Enraged',
+        icon: '😡',
+        color: '#ff4444',
+        duration: 3,
+        modifyDamage: (damage) => damage * 1.4, // 40% bonus
+        modifyIncomingDamage: (damage) => damage * 1.2 // Takes 20% more
+    },
+    RIPOSTE: {
+        id: 'riposte',
+        name: 'Riposte',
+        icon: '⚔️',
+        color: '#ffaa00',
+        duration: 1,
+        counterDamage: 5 // Flat counter damage
+    },
+    REFLECT: {
+        id: 'reflect',
+        name: 'Reflect',
+        icon: '🪞',
+        color: '#aaffff',
+        duration: 2,
+        reflectPercent: 0.5 // Reflects 50% of damage
+    },
+    DOMINATED: {
+        id: 'dominated',
+        name: 'Dominated',
+        icon: '🎭',
+        color: '#ff66ff',
+        duration: 2,
+        modifyDamage: (damage) => damage * 0.5 // 50% reduction
+    },
+    NIGHTMARES: {
+        id: 'nightmares',
+        name: 'Nightmares',
+        icon: '💀',
+        color: '#9900ff',
+        duration: 4,
+        onTurnEnd: (target, battleManager) => {
+            return { damage: 4 };
+        }
+    },
+    STUNNED: {
+        id: 'stunned',
+        name: 'Stunned',
+        icon: '💫',
+        color: '#ffff00',
+        duration: 1,
+        skipTurn: true
     }
 };
 

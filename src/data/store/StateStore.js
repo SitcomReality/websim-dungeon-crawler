@@ -31,6 +31,9 @@ class StateStore {
             statBoosts: { physical: 0, elemental: 0, psychic: 0 }, // Additive stat boosts
             damageMultiplier: 1.0,
             maxHPBonus: 0,
+            unlockedAbilities: [], // Additional abilities unlocked during run
+            fateThreads: 0, // Reroll resources
+            victoryThreshold: 20, // Battles to win
 
             // Highlighting for stats
             selectedAbilityId: null, // For player's hover/selection
@@ -95,7 +98,10 @@ class StateStore {
             maxHP: 100,
             statBoosts: { physical: 0, elemental: 0, psychic: 0 },
             damageMultiplier: 1.0,
-            maxHPBonus: 0
+            maxHPBonus: 0,
+            unlockedAbilities: [],
+            fateThreads: 0,
+            victoryThreshold: 20
         });
     }
 

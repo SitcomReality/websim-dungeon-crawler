@@ -3,6 +3,7 @@ import { ENTROPY_CONFIG } from './constants.js';
 export class EntropySystem {
     constructor() {
         this.current = ENTROPY_CONFIG.STARTING;
+        this.maxEntropy = ENTROPY_CONFIG.MAX;
     }
 
     /**
@@ -46,7 +47,7 @@ export class EntropySystem {
      * Add entropy
      */
     add(amount) {
-        this.current = Math.min(ENTROPY_CONFIG.MAX, this.current + amount);
+        this.current = Math.min(this.maxEntropy, this.current + amount);
     }
 
     /**

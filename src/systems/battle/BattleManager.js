@@ -1,6 +1,6 @@
 import { globalBus, EVENTS } from '../../core/events/EventBus.js';
 import { gameState } from '../../data/store/StateStore.js';
-import { ABILITY_POOL } from '../../data/AbilityData.js';
+import { ABILITY_POOL, ALL_ABILITIES, UNLOCKABLE_ABILITIES } from '../../data/AbilityData.js';
 import { CHARACTER_DATA } from '../../data/CharacterData.js';
 import { EntropySystem } from '../mechanics/EntropySystem.js';
 import { CooldownSystem } from '../mechanics/CooldownSystem.js';
@@ -21,6 +21,7 @@ export class BattleManager {
         // Upgrade modifiers
         this.entropyBonus = 0;
         this.momentumDecayMultiplier = 1.0;
+        this.cooldownReduction = 0;
 
         this.lastMode = null;
         this.lastTurn = null;
@@ -48,7 +49,7 @@ export class BattleManager {
         const isReady = this.cooldowns.isReady(abilityId);
         
         // Check if ability domain is locked
-        const ability = ABILITY_POOL.find(a => a.id === abilityId);
+        const ability = ALL_ABILITIES.find(a => a.id === abilityId);
         if (ability && this.statusEffects.isDomainLocked('PLAYER', ability.domain)) {
             return false;
         }
@@ -81,6 +82,13 @@ export class BattleManager {
             this.cooldowns.reset();
             this.momentum.reset();
             this.statusEffects.reset();
+            
+            // Apply starting momentum if player has it
+            if (state.startingMomentum) {
+                this.momentum.stacks.physical = state.startingMomentum;
+                this.momentum.stacks.elemental = state.startingMomentum;
+                this.momentum.stacks.psychic = state.startingMomentum;
+            }
             
             gameState.updateState({ 
                 playerGuarding: false,
@@ -142,9 +150,9 @@ export class BattleManager {
 
         const abilityId = availableAbilities.length > 0 
             ? availableAbilities[Math.floor(Math.random() * availableAbilities.length)]
-            : opponentChar.abilities[0]; // Fallback
+            : opponentChar.abilities[0];
             
-        const ability = ABILITY_POOL.find(a => a.id === abilityId);
+        const ability = ALL_ABILITIES.find(a => a.id === abilityId);
         const damage = this._calculateDamage(opponentChar, playerChar, ability, false);
 
         gameState.updateState({
@@ -166,8 +174,15 @@ export class BattleManager {
             return;
         }
 
-        const ability = ABILITY_POOL.find(a => a.id === abilityId);
+        const ability = ALL_ABILITIES.find(a => a.id === abilityId);
         if (!ability) return;
+        
+        // Check for victory condition
+        if (state.battleCount >= state.victoryThreshold) {
+            // Player has won!
+            gameState.updateState({ turn: 'ULTIMATE_VICTORY' });
+            return;
+        }
 
         // Consume entropy
         const entropyCost = ABILITY_ENTROPY_COSTS[abilityId] || 0;
@@ -207,6 +222,15 @@ export class BattleManager {
 
         const playerChar = CHARACTER_DATA[state.playerCharacterIndex];
         const opponentChar = CHARACTER_DATA[state.opponentCharacterIndex];
+        
+        // Check for special ability effects
+        let damageBonus = 0;
+        if (ability.special === 'execute' && state.opponentHP < state.opponentHP * 0.3) {
+            damageBonus = 1.5; // 50% bonus vs low HP
+        }
+        if (ability.special === 'chain' && this.statusEffects.hasEffect('OPPONENT', 'shocked')) {
+            damageBonus = 1.0; // Double damage
+        }
 
         // Broadcast ability used for UI indicators
         globalBus.emit(EVENTS.ABILITY_USED, {
@@ -216,7 +240,8 @@ export class BattleManager {
         });
 
         // Calculate damage
-        const damage = this._calculateDamage(playerChar, opponentChar, ability, true);
+        let damage = this._calculateDamage(playerChar, opponentChar, ability, true);
+        if (damageBonus) damage *= (1 + damageBonus);
 
         // Play Animation
         this.animator.playAttackSequence('PLAYER', ability, damage, 
@@ -227,12 +252,16 @@ export class BattleManager {
                 // Apply status effects
                 this._applyStatusEffects(ability, 'PLAYER', 'OPPONENT');
                 
-                // Apply life steal if present
+                // Apply life steal
                 let newPlayerHP = currentState.playerHP;
-                if (currentState.lifeSteal) {
+                let lifeStealAmount = currentState.lifeSteal || 0;
+                if (ability.special === 'lifesteal') {
+                    lifeStealAmount += Math.floor(damage * 0.5);
+                }
+                if (lifeStealAmount > 0) {
                     newPlayerHP = Math.min(
                         currentState.maxHP + currentState.maxHPBonus,
-                        newPlayerHP + currentState.lifeSteal
+                        newPlayerHP + lifeStealAmount
                     );
                 }
                 
@@ -259,14 +288,21 @@ export class BattleManager {
 
     getPredictedDamage(abilityId, isPlayerAttacking = true) {
         const state = gameState.getState();
-        const ability = ABILITY_POOL.find(a => a.id === abilityId);
+        const ability = ALL_ABILITIES.find(a => a.id === abilityId);
         if (!ability) return 0;
 
         const playerChar = CHARACTER_DATA[state.playerCharacterIndex];
         const opponentChar = CHARACTER_DATA[state.opponentCharacterIndex];
 
         if (isPlayerAttacking) {
-            return this._calculateDamage(playerChar, opponentChar, ability, true);
+            let damage = this._calculateDamage(playerChar, opponentChar, ability, true);
+            if (ability.special === 'execute' && state.opponentHP < state.opponentHP * 0.3) {
+                damage *= 1.5;
+            }
+            if (ability.special === 'chain' && this.statusEffects.hasEffect('OPPONENT', 'shocked')) {
+                damage *= 2.0;
+            }
+            return damage;
         } else {
             return this._calculateDamage(opponentChar, playerChar, ability, false);
         }
@@ -296,7 +332,7 @@ export class BattleManager {
 
         const opponentChar = CHARACTER_DATA[state.opponentCharacterIndex];
         const playerChar = CHARACTER_DATA[state.playerCharacterIndex];
-        const ability = ABILITY_POOL.find(a => a.id === abilityId);
+        const ability = ALL_ABILITIES.find(a => a.id === abilityId);
 
         // Recalculate damage with current systems state
         const damage = this._calculateDamage(opponentChar, playerChar, ability, false);
@@ -310,6 +346,8 @@ export class BattleManager {
 
         this.animator.playAttackSequence('OPPONENT', ability, damage,
             () => { // On Hit
+                const currentState = gameState.getState();
+                
                 // Apply status effects
                 this._applyStatusEffects(ability, 'OPPONENT', 'PLAYER');
                 
@@ -322,7 +360,33 @@ export class BattleManager {
                     }
                 });
                 
-                let newHP = Math.max(0, state.playerHP - damage - totalDoTDamage);
+                let finalDamage = damage + totalDoTDamage;
+                
+                // Apply damage reduction
+                if (currentState.damageReduction) {
+                    finalDamage *= (1 - currentState.damageReduction);
+                    finalDamage = Math.max(1, Math.round(finalDamage));
+                }
+                
+                // Check for fate thread
+                let newHP = currentState.playerHP - finalDamage;
+                if (newHP <= 0 && currentState.fateThreads > 0) {
+                    newHP = Math.floor((currentState.maxHP + currentState.maxHPBonus) * 0.3);
+                    gameState.updateState({ 
+                        playerHP: newHP,
+                        fateThreads: currentState.fateThreads - 1
+                    });
+                    globalBus.emit(EVENTS.HEAL_APPLIED, { target: 'PLAYER', amount: 'FATE THREAD!' });
+                    return;
+                }
+                
+                newHP = Math.max(0, newHP);
+                
+                // Gain entropy when hit
+                if (currentState.entropyOnHit && newHP > 0) {
+                    this.entropy.add(currentState.entropyOnHit);
+                }
+                
                 gameState.updateState({ playerHP: newHP });
 
                 globalBus.emit(EVENTS.DAMAGE_APPLIED, {
@@ -401,9 +465,9 @@ export class BattleManager {
             damage *= state.damageMultiplier;
         }
         
-        // Enemy scaling based on battle count
+        // Enemy scaling based on battle count (reduced)
         if (!isPlayer && state.battleCount) {
-            const scaling = 1 + (state.battleCount - 1) * 0.1;
+            const scaling = 1 + (state.battleCount - 1) * 0.06; // Reduced from 0.1
             damage *= scaling;
         }
         

@@ -2,7 +2,8 @@ import { ABILITY_COOLDOWNS, COOLDOWN_CONFIG } from './constants.js';
 
 export class CooldownSystem {
     constructor() {
-        this.cooldowns = {}; // abilityId -> turns remaining
+        this.cooldowns = {};
+        this.cooldownReduction = 0;
     }
 
     /**
@@ -23,8 +24,9 @@ export class CooldownSystem {
      * Trigger cooldown for an ability
      */
     trigger(abilityId) {
-        const cooldownTurns = ABILITY_COOLDOWNS[abilityId] || COOLDOWN_CONFIG.DEFAULT_COOLDOWN;
-        this.cooldowns[abilityId] = cooldownTurns;
+        const baseCooldown = ABILITY_COOLDOWNS[abilityId] || COOLDOWN_CONFIG.DEFAULT_COOLDOWN;
+        const reducedCooldown = Math.max(0, baseCooldown - this.cooldownReduction);
+        this.cooldowns[abilityId] = reducedCooldown;
     }
 
     /**

@@ -1,7 +1,9 @@
 /**
  * Universal ability pool - all available abilities in the game.
- * Characters will be assigned 4 abilities from this pool
+ * Characters start with 4 abilities and can unlock more
  */
+
+// Starting abilities (assigned to characters)
 export const ABILITY_POOL = [
     // Physical abilities
     {
@@ -120,8 +122,8 @@ export const ABILITY_POOL = [
     // Special/Basic actions
     {
         id: 'rest',
-        name: 'Rest & Focus',
-        description: 'Recover energy and fortify defenses',
+        name: 'Existential Crisis',
+        description: 'Contemplate mortality while recovering energy',
         domain: 'psychic',
         damageType: 'finesse',
         tags: ['basic', 'utility'],
@@ -129,11 +131,107 @@ export const ABILITY_POOL = [
     },
     {
         id: 'guard',
-        name: 'Guard',
-        description: 'Brace for incoming assault, reducing damage',
+        name: 'Cowardice',
+        description: 'Hide behind something sturdy',
         domain: 'physical',
         damageType: 'resistance',
         tags: ['basic', 'utility'],
         statusEffects: [{ effect: 'FORTIFIED', chance: 1.0, target: 'self' }]
     }
 ];
+
+// Advanced abilities (unlockable during runs)
+export const UNLOCKABLE_ABILITIES = [
+    // Physical advanced
+    {
+        id: 'execute',
+        name: 'Dramatic Finish',
+        description: 'Deal massive damage to wounded foes',
+        domain: 'physical',
+        damageType: 'power',
+        tags: ['melee', 'execute'],
+        statusEffects: [],
+        special: 'execute' // Bonus damage below 30% HP
+    },
+    {
+        id: 'riposte',
+        name: 'Spite',
+        description: 'Counter-attack when hit',
+        domain: 'physical',
+        damageType: 'finesse',
+        tags: ['counter'],
+        statusEffects: [{ effect: 'RIPOSTE', chance: 1.0, target: 'self' }]
+    },
+    {
+        id: 'rampage',
+        name: 'Tantrum',
+        description: 'Wild assault that empowers you',
+        domain: 'physical',
+        damageType: 'power',
+        tags: ['melee', 'buff'],
+        statusEffects: [{ effect: 'ENRAGED', chance: 0.8, target: 'self' }]
+    },
+    
+    // Elemental advanced
+    {
+        id: 'chain_lightning',
+        name: 'Social Anxiety',
+        description: 'Spreads shocking discomfort',
+        domain: 'elemental',
+        damageType: 'finesse',
+        tags: ['magic', 'lightning', 'aoe'],
+        statusEffects: [{ effect: 'SHOCKED', chance: 1.0, target: 'enemy' }],
+        special: 'chain' // Double damage if shocked
+    },
+    {
+        id: 'meteor',
+        name: 'Existential Dread',
+        description: 'Crushing realization from above',
+        domain: 'elemental',
+        damageType: 'power',
+        tags: ['magic', 'fire', 'heavy'],
+        statusEffects: [{ effect: 'BURNING', chance: 0.9, target: 'enemy' }, { effect: 'STUNNED', chance: 0.3, target: 'enemy' }]
+    },
+    {
+        id: 'drain',
+        name: 'Emotional Vampire',
+        description: 'Siphon their vitality',
+        domain: 'elemental',
+        damageType: 'finesse',
+        tags: ['magic', 'drain'],
+        statusEffects: [],
+        special: 'lifesteal' // Heals for 50% damage dealt
+    },
+    
+    // Psychic advanced
+    {
+        id: 'dominate',
+        name: 'Gaslighting',
+        description: 'Make them question everything',
+        domain: 'psychic',
+        damageType: 'power',
+        tags: ['mental', 'control'],
+        statusEffects: [{ effect: 'DOMINATED', chance: 0.7, target: 'enemy' }]
+    },
+    {
+        id: 'nightmare',
+        name: 'Cringe Compilation',
+        description: 'Replay their worst moments',
+        domain: 'psychic',
+        damageType: 'finesse',
+        tags: ['mental', 'dot'],
+        statusEffects: [{ effect: 'NIGHTMARES', chance: 1.0, target: 'enemy' }]
+    },
+    {
+        id: 'reflect',
+        name: 'No U',
+        description: 'Return damage to sender',
+        domain: 'psychic',
+        damageType: 'resistance',
+        tags: ['defensive'],
+        statusEffects: [{ effect: 'REFLECT', chance: 1.0, target: 'self' }]
+    }
+];
+
+// Combined pool for lookups
+export const ALL_ABILITIES = [...ABILITY_POOL, ...UNLOCKABLE_ABILITIES];

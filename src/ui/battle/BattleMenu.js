@@ -1,7 +1,7 @@
 import { globalBus, EVENTS } from '../../core/events/EventBus.js';
 import { gameState } from '../../data/store/StateStore.js';
 import { CHARACTER_DATA } from '../../data/CharacterData.js';
-import { ABILITY_POOL } from '../../data/AbilityData.js';
+import { ABILITY_POOL, ALL_ABILITIES } from '../../data/AbilityData.js';
 import { ABILITY_ENTROPY_COSTS } from '../../systems/mechanics/constants.js';
 import { STATUS_EFFECTS } from '../../systems/mechanics/StatusEffectSystem.js';
 
@@ -57,7 +57,10 @@ export class BattleMenu {
         this.element.innerHTML = '';
 
         const playerChar = CHARACTER_DATA[state.playerCharacterIndex];
-        const selectedAbility = ABILITY_POOL.find(a => a.id === state.selectedAbilityId);
+        const selectedAbility = ALL_ABILITIES.find(a => a.id === state.selectedAbilityId);
+        
+        // Get all available abilities (base + unlocked)
+        const allPlayerAbilities = [...playerChar.abilities, ...(state.unlockedAbilities || [])];
 
         // 0. Render Basic Actions (Always available)
         const basicActionsContainer = document.createElement('div');
@@ -129,8 +132,8 @@ export class BattleMenu {
         const buttonList = document.createElement('div');
         buttonList.className = 'ability-list';
         
-        playerChar.abilities.forEach(abilityId => {
-            const ability = ABILITY_POOL.find(a => a.id === abilityId);
+        allPlayerAbilities.forEach(abilityId => {
+            const ability = ALL_ABILITIES.find(a => a.id === abilityId);
             if (!ability) return;
 
             const entropyCost = ABILITY_ENTROPY_COSTS[abilityId] || 0;

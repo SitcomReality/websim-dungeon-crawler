@@ -1,38 +1,38 @@
 export const UPGRADE_POOL = [
-    // Healing upgrades (Common - always compete with power)
+    // Healing upgrades (Now more balanced)
     {
         id: 'small_heal',
-        name: 'Rest & Recover',
-        icon: '💊',
-        description: 'Restore 30 HP',
+        name: 'Band-Aid',
+        icon: '🩹',
+        description: 'Restore 25 HP',
         rarity: 'common',
         type: 'heal',
         apply: (state, battleManager) => {
-            const newHP = Math.min(state.maxHP + state.maxHPBonus, state.playerHP + 30);
+            const newHP = Math.min(state.maxHP + state.maxHPBonus, state.playerHP + 25);
             state.playerHP = newHP;
         }
     },
     {
         id: 'medium_heal',
-        name: 'Deep Recovery',
+        name: 'Therapy Session',
         icon: '💚',
-        description: 'Restore 50 HP',
+        description: 'Restore 40 HP',
         rarity: 'uncommon',
         type: 'heal',
         apply: (state, battleManager) => {
-            const newHP = Math.min(state.maxHP + state.maxHPBonus, state.playerHP + 50);
+            const newHP = Math.min(state.maxHP + state.maxHPBonus, state.playerHP + 40);
             state.playerHP = newHP;
         }
     },
     {
         id: 'large_heal',
-        name: 'Full Restoration',
+        name: 'Miracle Drug',
         icon: '✨',
-        description: 'Restore 80 HP',
+        description: 'Restore 60 HP',
         rarity: 'rare',
         type: 'heal',
         apply: (state, battleManager) => {
-            const newHP = Math.min(state.maxHP + state.maxHPBonus, state.playerHP + 80);
+            const newHP = Math.min(state.maxHP + state.maxHPBonus, state.playerHP + 60);
             state.playerHP = newHP;
         }
     },
@@ -124,13 +124,106 @@ export const UPGRADE_POOL = [
     // Hybrid upgrades
     {
         id: 'vampire',
-        name: 'Life Steal',
+        name: 'Parasocial',
         icon: '🩸',
         description: 'Heal 3 HP per successful attack',
         rarity: 'rare',
         type: 'power',
         apply: (state) => {
             state.lifeSteal = (state.lifeSteal || 0) + 3;
+        }
+    },
+    
+    // Mechanical upgrades
+    {
+        id: 'fate_thread',
+        name: 'Plot Armor',
+        icon: '🎲',
+        description: 'Gain 2 fate threads (prevent death once each)',
+        rarity: 'rare',
+        type: 'mechanical',
+        apply: (state) => {
+            state.fateThreads = (state.fateThreads || 0) + 2;
+        }
+    },
+    {
+        id: 'ability_slot',
+        name: 'Multitasking',
+        icon: '🎯',
+        description: 'Unlock a new powerful ability',
+        rarity: 'rare',
+        type: 'ability',
+        apply: (state) => {
+            // Will be handled specially in UpgradeMenu
+        }
+    },
+    {
+        id: 'entropy_max',
+        name: 'Unhinged',
+        icon: '🌪️',
+        description: '+30 Max Entropy',
+        rarity: 'uncommon',
+        type: 'mechanical',
+        apply: (state, battleManager) => {
+            // Increase max entropy
+            battleManager.entropy.maxEntropy = (battleManager.entropy.maxEntropy || 100) + 30;
+        }
+    },
+    {
+        id: 'cooldown_reduction',
+        name: 'Speedrun Strats',
+        icon: '⏱️',
+        description: 'All cooldowns -1 turn (min 0)',
+        rarity: 'uncommon',
+        type: 'mechanical',
+        apply: (state, battleManager) => {
+            battleManager.cooldownReduction = (battleManager.cooldownReduction || 0) + 1;
+        }
+    },
+    {
+        id: 'starting_momentum',
+        name: 'Opening Gambit',
+        icon: '🚀',
+        description: 'Start battles with +2 momentum in all domains',
+        rarity: 'uncommon',
+        type: 'mechanical',
+        apply: (state) => {
+            state.startingMomentum = (state.startingMomentum || 0) + 2;
+        }
+    },
+    {
+        id: 'entropy_on_hit',
+        name: 'Schadenfreude',
+        icon: '😈',
+        description: 'Gain +5 entropy when damaged',
+        rarity: 'uncommon',
+        type: 'mechanical',
+        apply: (state) => {
+            state.entropyOnHit = (state.entropyOnHit || 0) + 5;
+        }
+    },
+    {
+        id: 'glass_cannon',
+        name: 'Main Character',
+        icon: '💥',
+        description: '+30% damage, -15 Max HP',
+        rarity: 'rare',
+        type: 'power',
+        apply: (state) => {
+            state.damageMultiplier *= 1.3;
+            state.maxHPBonus -= 15;
+            state.playerHP = Math.min(state.maxHP + state.maxHPBonus, state.playerHP);
+        }
+    },
+    {
+        id: 'thick_skin',
+        name: 'Denial',
+        icon: '🛡️',
+        description: 'Take 15% less damage',
+        rarity: 'uncommon',
+        type: 'defensive',
+        apply: (state) => {
+            state.damageReduction = (state.damageReduction || 0) + 0.15;
         }
     }
 ];

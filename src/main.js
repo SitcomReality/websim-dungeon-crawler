@@ -19,7 +19,7 @@ import { UpgradeMenu } from './ui/menu/UpgradeMenu.js';
 import { GameOverMenu } from './ui/menu/GameOverMenu.js';
 import { ROOM_WIDTH, ROOM_HEIGHT, SPRITE_SIZE } from './config/dimensions.js';
 import { CHARACTER_DATA } from './data/CharacterData.js';
-import { ABILITY_POOL } from './data/AbilityData.js';
+import { ABILITY_POOL, ALL_ABILITIES } from './data/AbilityData.js';
 import { STATUS_EFFECTS } from './systems/mechanics/StatusEffectSystem.js';
 
 class Game {
@@ -198,7 +198,7 @@ class Game {
         const currentAttacker = executingAbilityId ? executingAttacker : 'PLAYER';
 
         if (activeAbilityId) {
-            const ability = ABILITY_POOL.find(a => a.id === activeAbilityId);
+            const ability = ALL_ABILITIES.find(a => a.id === activeAbilityId);
             if (ability) {
                 const rowMap = { power: 0, finesse: 1, resistance: 2 };
                 const colMap = { physical: 0, elemental: 1, psychic: 2 };
@@ -290,10 +290,21 @@ class Game {
             // Draw Opponent Intent
             if (turn === 'PLAYER' && opponentIntent) {
                 const intentY = barY + barHeight + 4;
-                const ability = ABILITY_POOL.find(a => a.id === opponentIntent.abilityId);
+                const ability = ALL_ABILITIES.find(a => a.id === opponentIntent.abilityId);
                 if (ability) {
                     this._drawOpponentIntent(barX, intentY, barWidth, opponentIntent.predictedDamage, ability.domain, opponentIntent.statusEffects);
                 }
+            }
+            
+            // Draw fate threads if present
+            if (state.fateThreads > 0) {
+                const ctx = this.canvasManager.context;
+                ctx.save();
+                ctx.fillStyle = '#ffdd00';
+                ctx.font = 'bold 12px monospace';
+                ctx.textAlign = 'right';
+                ctx.fillText(`🎲 ${state.fateThreads}`, barX + barWidth, groundY - gridYOffset - 30);
+                ctx.restore();
             }
         }
 
