@@ -1,7 +1,7 @@
 import { CHARACTER_DATA } from '../../data/CharacterData.js';
 import { ALL_ABILITIES, ABILITY_POOL } from '../../data/AbilityData.js';
 import { gameState } from '../../data/store/StateStore.js';
-import { globalBus, EVENTS } from '../../core/events/Bus.js';
+import { globalBus, EVENTS } from '../../core/events/EventBus.js';
 import { DamageCalculator } from './DamageCalculator.js';
 
 /**
